@@ -29,6 +29,8 @@ function renderResults(results) {
         setResult('targetSpeed', '---');
         setResult('cpaDistance', '---');
         setResult('tcpaTime', '---');
+        setResult('cpaBearing', '---');
+        setResult('aspect', '---');
         setResult('targetCourseTrue', '---');
         setResult('targetSpeedTrue', '---');
         return;
@@ -48,9 +50,14 @@ function renderResults(results) {
         const minutes = Math.abs(results.cpa.tcpaMinutes);
         tcpaEl.textContent = minutes.toFixed(1) + ' min';
         tcpaEl.className = tcpaClass(minutes, results.cpa.distance);
+
+        setResult('cpaBearing', results.cpa.bearing.toFixed(1) + '\u00B0');
+        setResult('aspect', results.aspectLabel);
     } else {
         setResult('cpaDistance', 'N/A');
         setResult('tcpaTime', 'N/A');
+        setResult('cpaBearing', 'N/A');
+        setResult('aspect', 'N/A');
     }
 }
 

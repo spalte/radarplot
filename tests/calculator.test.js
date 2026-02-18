@@ -230,6 +230,12 @@ describe('computeResults', () => {
         assert.ok(results.relative.speed > 0);
         assert.ok(results.trueTarget.speed >= 0);
         assert.ok(results.cpa.distance >= 0);
+        assert.ok(typeof results.cpa.bearing === 'number');
+        assert.ok(results.cpa.bearing >= 0 && results.cpa.bearing < 360);
+        assert.ok(typeof results.aspect === 'number');
+        assert.ok(results.aspect >= 0 && results.aspect < 360);
+        assert.ok(typeof results.aspectLabel === 'string');
+        assert.ok(results.aspectLabel.length > 0);
     });
 
     it('returns null for empty time strings', () => {

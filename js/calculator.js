@@ -59,6 +59,22 @@ export function trueMotion(ownCourse, ownSpeed, relativeCourse, relativeSpeed) {
     return cartesianToPolar(own.x + rel.x, own.y + rel.y);
 }
 
+export function formatAspect(aspectDeg) {
+    const a = ((aspectDeg % 360) + 360) % 360;
+    const angle = a <= 180 ? a : 360 - a;
+    const sideName = a <= 180 ? 'Tribord' : 'B\u00e2bord';
+    const sidelight = a <= 180 ? `${sideName} (vert)` : `${sideName} (rouge)`;
+    const sternlight = `${sideName} (blanc)`;
+
+    if (angle < 2)               return "De l'avant - (rouge et vert)";
+    if (angle < 22.5)            return `De l'avant - ${sidelight}`;
+    if (angle < 67.5)            return `Sur l'avant du travers - ${sidelight}`;
+    if (angle < 112.5)           return `Par le travers - ${sidelight}`;
+    if (angle < 157.5)           return `Sur l'arri\u00e8re du travers - ${sternlight}`;
+    if (angle < 178)             return `De l'arri\u00e8re - ${sternlight}`;
+    return "De l'arri\u00e8re - (blanc)";
+}
+
 export function computeResults(target, ownShip) {
     const pos1 = polarToCartesian(target.bearing1, target.distance1);
     const pos2 = polarToCartesian(target.bearing2, target.distance2);
@@ -73,6 +89,9 @@ export function computeResults(target, ownShip) {
     const cpa = closestPointOfApproach(pos1, relative.dx, relative.dy);
     const tcpaHours = tcpaFromObservation(cpa.t, deltaTime);
     const trueTarget = trueMotion(ownShip.course, ownShip.speed, relative.course, relative.speed);
+    const cpaBearing = cartesianToPolar(cpa.point.x, cpa.point.y).bearing;
+    const bearingTargetToOwnAtP2 = (target.bearing2 + 180) % 360;
+    const aspect = (bearingTargetToOwnAtP2 - trueTarget.bearing + 360) % 360;
 
     return {
         pos1,
@@ -81,11 +100,14 @@ export function computeResults(target, ownShip) {
         cpa: {
             distance: cpa.distance,
             point: cpa.point,
+            bearing: cpaBearing,
             tcpaMinutes: tcpaHours * 60
         },
         trueTarget: {
             course: trueTarget.bearing,
             speed: trueTarget.distance
-        }
+        },
+        aspect,
+        aspectLabel: formatAspect(aspect)
     };
 }
