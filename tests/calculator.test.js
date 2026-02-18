@@ -243,4 +243,16 @@ describe('computeResults', () => {
         const ownShip = { course: 0, speed: 12 };
         assert.strictEqual(computeResults(target, ownShip), null);
     });
+
+    it('prediction extrapolates P2 by 1 hour of relative motion', () => {
+        const target = { bearing1: 0, distance1: 10, time1: '12:00', bearing2: 0, distance2: 5, time2: '12:30' };
+        const ownShip = { course: 0, speed: 0 };
+        const results = computeResults(target, ownShip);
+        const pos2 = polarToCartesian(0, 5);
+        const deltaTime = 0.5;
+        const expectedX = pos2.x + (results.relative.dx / deltaTime);
+        const expectedY = pos2.y + (results.relative.dy / deltaTime);
+        assertCloseLoose(results.prediction.x, expectedX, 1e-6, 'prediction.x');
+        assertCloseLoose(results.prediction.y, expectedY, 1e-6, 'prediction.y');
+    });
 });

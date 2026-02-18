@@ -108,6 +108,10 @@ export function computeResults(target, ownShip) {
             speed: trueTarget.distance
         },
         aspect,
-        aspectLabel: formatAspect(aspect)
+        aspectLabel: formatAspect(aspect),
+        prediction: {
+            x: pos2.x + relative.dx / deltaTime,
+            y: pos2.y + relative.dy / deltaTime
+        }
     };
 }

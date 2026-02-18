@@ -70,6 +70,28 @@ function drawCPA(ctx, centerX, centerY, scale, rotation, results) {
     ctx.fillText('CPA', cpa.x + 12, cpa.y - 12);
 }
 
+function drawPredictionLine(ctx, centerX, centerY, scale, rotation, results) {
+    if (results.relative.speed <= 0.1) return;
+
+    const p2 = nmToCanvas(results.pos2.x, results.pos2.y, centerX, centerY, scale, rotation);
+    const pred = nmToCanvas(results.prediction.x, results.prediction.y, centerX, centerY, scale, rotation);
+
+    ctx.strokeStyle = COLORS.target;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(p2.x, p2.y);
+    ctx.lineTo(pred.x, pred.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = COLORS.target;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(pred.x, pred.y, 4, 0, Math.PI * 2);
+    ctx.stroke();
+}
+
 const RADAR_RING_COUNT = 4;
 const NM_PER_RING = 5;
 
@@ -98,6 +120,7 @@ export function renderCanvas(canvas, model, results) {
 
     if (results) {
         drawTargetPositions(ctx, centerX, centerY, scale, rotation, results);
+        drawPredictionLine(ctx, centerX, centerY, scale, rotation, results);
         drawCPA(ctx, centerX, centerY, scale, rotation, results);
     }
 }

@@ -131,30 +131,41 @@
                     <canvas id="radarCanvas"></canvas>
                     <div class="legend">
                         <div class="legend-item">
-                            <div class="legend-color" style="background: #00ff41;"></div>
-                            <span>Vecteur Propre (Vert)</span>
-                        </div>
-                        <div class="legend-item">
                             <div class="legend-color" style="background: #ffa500;"></div>
                             <span>Positions Cible</span>
                         </div>
                         <div class="legend-item">
-                            <div class="legend-color" style="background: #4a90e2;"></div>
-                            <span>Vecteur Relatif (Bleu)</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color" style="background: #ff3b3b;"></div>
-                            <span>Vecteur Vrai (Rouge)</span>
-                        </div>
-                        <div class="legend-item">
                             <div class="legend-color" style="background: #a855f7;"></div>
-                            <span>CPA (Violet)</span>
+                            <span>CPA</span>
+                        </div>
+                        <div class="legend-item">
+                            <svg width="28" height="12" viewBox="0 0 28 12">
+                                <line x1="0" y1="6" x2="22" y2="6" stroke="#ffa500" stroke-width="1.5" stroke-dasharray="4 3"/>
+                                <circle cx="24" cy="6" r="3" fill="none" stroke="#ffa500" stroke-width="1.5"/>
+                            </svg>
+                            <span>Position dans 1h</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="triangle-canvas-container">
                     <canvas id="triangleCanvas"></canvas>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #00ff41;"></div>
+                            <span>Vecteur Propre</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #4a90e2;"></div>
+                            <span>Vecteur Relatif</span>
+                        </div>
+                        <div class="legend-item">
+                            <svg width="20" height="12" viewBox="0 0 20 12">
+                                <line x1="0" y1="6" x2="20" y2="6" stroke="#ff3b3b" stroke-width="2" stroke-dasharray="6 3"/>
+                            </svg>
+                            <span>Vecteur Vrai</span>
+                        </div>
+                    </div>
                     <div class="scale-control">
                         <button class="scale-btn" id="scaleDown">&minus;</button>
                         <span class="scale-label" id="scaleLabel">&Eacute;chelle : 1</span>
