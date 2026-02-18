@@ -122,6 +122,14 @@
                             <span class="result-label">vB Vitesse Vrai Cible:</span>
                             <span class="result-value" id="targetSpeedTrue">---</span>
                         </div>
+                        <div class="result-item avoidance-result" id="avoidanceSection" style="display:none;">
+                            <span class="result-label">CPA &Eacute;vitement:</span>
+                            <span class="result-value" id="avoidCpaDistance">---</span>
+                        </div>
+                        <div class="result-item avoidance-result" id="avoidanceTcpaSection" style="display:none;">
+                            <span class="result-label">TCPA &Eacute;vitement:</span>
+                            <span class="result-value" id="avoidTcpaTime">---</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -149,6 +157,11 @@
                 </div>
 
                 <div class="triangle-canvas-container">
+                    <div id="avoidanceOverlay" class="avoidance-overlay" style="display:none;">
+                        <label>Dist. &eacute;vitement (NM)</label>
+                        <input type="number" id="avoidanceDistance" value="3" min="0.5" max="20" step="0.5">
+                        <button id="avoidanceExit" class="avoidance-exit-btn">&times;</button>
+                    </div>
                     <canvas id="triangleCanvas"></canvas>
                     <div class="legend">
                         <div class="legend-item">

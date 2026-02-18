@@ -75,6 +75,74 @@ export function formatAspect(aspectDeg) {
     return "De l'arri\u00e8re - (blanc)";
 }
 
+export function computeAvoidanceResults(results, newCourse, newSpeed, avoidanceDistance) {
+    const { pos2, relative } = results;
+
+    const dx = relative.dx;
+    const dy = relative.dy;
+    const lenSq = dx * dx + dy * dy;
+    if (lenSq === 0) return null;
+
+    const a = lenSq;
+    const b = 2 * (pos2.x * dx + pos2.y * dy);
+    const c = pos2.x * pos2.x + pos2.y * pos2.y - avoidanceDistance * avoidanceDistance;
+    const disc = b * b - 4 * a * c;
+    if (disc < 0) return null;
+
+    const sqrtDisc = Math.sqrt(disc);
+    const s1 = (-b - sqrtDisc) / (2 * a);
+    const s2 = (-b + sqrtDisc) / (2 * a);
+    let s;
+    if (s1 >= -1e-9) s = Math.max(0, s1);
+    else if (s2 >= -1e-9) s = Math.max(0, s2);
+    else return null;
+
+    const maneuverPoint = {
+        x: pos2.x + s * dx,
+        y: pos2.y + s * dy
+    };
+
+    const trueVel = polarToCartesian(results.trueTarget.course, results.trueTarget.speed);
+    const newOwnVel = polarToCartesian(newCourse, newSpeed);
+    const newRelVel = { x: trueVel.x - newOwnVel.x, y: trueVel.y - newOwnVel.y };
+    const newRelPolar = cartesianToPolar(newRelVel.x, newRelVel.y);
+
+    const rawCpa = closestPointOfApproach(maneuverPoint, newRelVel.x, newRelVel.y);
+    const clampedT = Math.max(0, rawCpa.t);
+    const cpaPoint = clampedT === rawCpa.t
+        ? rawCpa.point
+        : { x: maneuverPoint.x, y: maneuverPoint.y };
+    const cpaDistance = clampedT === rawCpa.t
+        ? rawCpa.distance
+        : Math.sqrt(maneuverPoint.x * maneuverPoint.x + maneuverPoint.y * maneuverPoint.y);
+    const cpaBearing = cartesianToPolar(cpaPoint.x, cpaPoint.y).bearing;
+
+    const p1p2Dist = Math.sqrt(lenSq);
+    const deltaTime = p1p2Dist / relative.speed;
+    const timeToManeuverHours = s * deltaTime;
+    const totalTcpaHours = timeToManeuverHours + clampedT;
+
+    return {
+        maneuverPoint,
+        relative: {
+            course: newRelPolar.bearing,
+            speed: newRelPolar.distance,
+            dx: newRelVel.x,
+            dy: newRelVel.y
+        },
+        cpa: {
+            distance: cpaDistance,
+            point: cpaPoint,
+            bearing: cpaBearing,
+            tcpaMinutes: totalTcpaHours * 60
+        },
+        prediction: {
+            x: maneuverPoint.x + newRelVel.x,
+            y: maneuverPoint.y + newRelVel.y
+        }
+    };
+}
+
 export function computeResults(target, ownShip) {
     const pos1 = polarToCartesian(target.bearing1, target.distance1);
     const pos2 = polarToCartesian(target.bearing2, target.distance2);

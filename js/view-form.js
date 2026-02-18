@@ -47,7 +47,7 @@ function renderResults(results) {
         cpaEl.className = cpaClass(results.cpa.distance);
 
         const tcpaEl = document.getElementById('tcpaTime');
-        const minutes = Math.abs(results.cpa.tcpaMinutes);
+        const minutes = results.cpa.tcpaMinutes;
         tcpaEl.textContent = minutes.toFixed(1) + ' min';
         tcpaEl.className = tcpaClass(minutes, results.cpa.distance);
 
@@ -61,7 +61,28 @@ function renderResults(results) {
     }
 }
 
-export function renderForm(model, results) {
+function renderAvoidanceResults(active, avoidanceResults) {
+    const cpaSection = document.getElementById('avoidanceSection');
+    const tcpaSection = document.getElementById('avoidanceTcpaSection');
+    if (!cpaSection) return;
+
+    const show = active && avoidanceResults;
+    cpaSection.style.display = show ? '' : 'none';
+    tcpaSection.style.display = show ? '' : 'none';
+
+    if (!show) return;
+
+    const cpaEl = document.getElementById('avoidCpaDistance');
+    cpaEl.textContent = avoidanceResults.cpa.distance.toFixed(2) + ' NM';
+    cpaEl.className = cpaClass(avoidanceResults.cpa.distance);
+
+    const tcpaEl = document.getElementById('avoidTcpaTime');
+    const minutes = avoidanceResults.cpa.tcpaMinutes;
+    tcpaEl.textContent = minutes.toFixed(1) + ' min';
+    tcpaEl.className = tcpaClass(minutes, avoidanceResults.cpa.distance);
+}
+
+export function renderForm(model, results, avoidanceResults) {
     const { ownShip, orientationMode, currentTargetIndex } = model;
     const target = model.currentTarget;
 
@@ -86,4 +107,5 @@ export function renderForm(model, results) {
     });
 
     renderResults(results);
+    renderAvoidanceResults(model.avoidance.active, avoidanceResults);
 }

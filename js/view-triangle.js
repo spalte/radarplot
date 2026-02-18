@@ -90,7 +90,37 @@ export function resizeTriangleCanvas(canvas) {
     canvas._logical = setupCanvas(canvas, 600);
 }
 
-export function renderTriangle(canvas, model, results) {
+function drawAvoidanceVectors(ctx, centerX, centerY, targetEnd, model, pixelsPerKnot, rotation) {
+    const offset = bearingToCanvasOffset(model.avoidance.course, model.avoidance.speed, pixelsPerKnot, rotation);
+    const newOwnEndX = centerX + offset.dx;
+    const newOwnEndY = centerY + offset.dy;
+
+    ctx.globalAlpha = 0.4;
+
+    ctx.strokeStyle = COLORS.ownShip;
+    ctx.lineWidth = 3;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.lineTo(newOwnEndX, newOwnEndY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    drawArrowHead(ctx, centerX, centerY, newOwnEndX, newOwnEndY, COLORS.ownShip, 10);
+
+    ctx.strokeStyle = COLORS.relative;
+    ctx.lineWidth = 3;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(newOwnEndX, newOwnEndY);
+    ctx.lineTo(targetEnd.x, targetEnd.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    drawArrowHead(ctx, newOwnEndX, newOwnEndY, targetEnd.x, targetEnd.y, COLORS.relative, 10);
+
+    ctx.globalAlpha = 1.0;
+}
+
+export function renderTriangle(canvas, model, results, avoidanceResults) {
     const ctx = canvas.getContext('2d');
     const { width, height } = canvas._logical;
     const centerX = width / 2;
@@ -110,6 +140,7 @@ export function renderTriangle(canvas, model, results) {
     ctx.fillText('TRIANGLE DES VITESSES', centerX, 25);
 
     if (!results) {
+        canvas._triangleState = null;
         drawOriginDot(ctx, centerX, centerY);
         return;
     }
@@ -120,5 +151,19 @@ export function renderTriangle(canvas, model, results) {
     const ownEnd = drawOwnShipVector(ctx, centerX, centerY, model, pixelsPerKnot, rotation);
     const targetEnd = drawRelativeVector(ctx, ownEnd.x, ownEnd.y, results, pixelsPerKnot, rotation);
     drawTrueTargetVector(ctx, centerX, centerY, targetEnd, results);
+
+    if (model.avoidance.active && avoidanceResults) {
+        drawAvoidanceVectors(ctx, centerX, centerY, targetEnd, model, pixelsPerKnot, rotation);
+    }
+
     drawOriginDot(ctx, centerX, centerY);
+
+    canvas._triangleState = {
+        tipX: ownEnd.x,
+        tipY: ownEnd.y,
+        centerX,
+        centerY,
+        pixelsPerKnot,
+        rotation
+    };
 }

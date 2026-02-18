@@ -7,6 +7,7 @@ export function createModel() {
         currentTargetIndex: 0,
         triangleScaleIndex: null,
         triangleScaleManual: false,
+        avoidance: { active: false, course: 0, speed: 0, distance: 3 },
         targets: [
             { bearing1: 45, distance1: 8, time1: '12:00', bearing2: 50, distance2: 6, time2: '12:12' },
             { bearing1: 90, distance1: 10, time1: '14:00', bearing2: 95, distance2: 8, time2: '14:15' },
@@ -67,6 +68,23 @@ export function createModel() {
             const current = this.triangleScaleIndex ?? 0;
             this.triangleScaleIndex = Math.max(0, Math.min(maxIndex, current + delta));
             this.triangleScaleManual = true;
+            this.notify();
+        },
+
+        setAvoidance(course, speed) {
+            this.avoidance.active = true;
+            this.avoidance.course = course;
+            this.avoidance.speed = speed;
+            this.notify();
+        },
+
+        setAvoidanceDistance(d) {
+            this.avoidance.distance = d;
+            this.notify();
+        },
+
+        exitAvoidance() {
+            this.avoidance.active = false;
             this.notify();
         }
     };

@@ -92,6 +92,61 @@ function drawPredictionLine(ctx, centerX, centerY, scale, rotation, results) {
     ctx.stroke();
 }
 
+function drawAvoidancePrediction(ctx, centerX, centerY, scale, rotation, avoidanceResults) {
+    if (avoidanceResults.relative.speed <= 0.1) return;
+
+    const mp = nmToCanvas(avoidanceResults.maneuverPoint.x, avoidanceResults.maneuverPoint.y, centerX, centerY, scale, rotation);
+    const pred = nmToCanvas(avoidanceResults.prediction.x, avoidanceResults.prediction.y, centerX, centerY, scale, rotation);
+
+    ctx.globalAlpha = 0.45;
+
+    ctx.strokeStyle = COLORS.target;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(mp.x, mp.y);
+    ctx.lineTo(pred.x, pred.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = COLORS.target;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(pred.x, pred.y, 4, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.globalAlpha = 1.0;
+}
+
+function drawAvoidanceCPA(ctx, centerX, centerY, scale, rotation, avoidanceResults) {
+    if (avoidanceResults.relative.speed <= 0.1) return;
+
+    const cpa = nmToCanvas(avoidanceResults.cpa.point.x, avoidanceResults.cpa.point.y, centerX, centerY, scale, rotation);
+
+    ctx.globalAlpha = 0.45;
+
+    ctx.fillStyle = COLORS.cpa;
+    ctx.beginPath();
+    ctx.arc(cpa.x, cpa.y, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = COLORS.cpa;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.lineTo(cpa.x, cpa.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = COLORS.cpa;
+    ctx.font = 'bold 11px Share Tech Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText('CPA\'', cpa.x + 10, cpa.y - 10);
+
+    ctx.globalAlpha = 1.0;
+}
+
 const RADAR_RING_COUNT = 4;
 const NM_PER_RING = 5;
 
@@ -99,7 +154,7 @@ export function resizeCanvas(canvas) {
     canvas._logical = setupCanvas(canvas, 600);
 }
 
-export function renderCanvas(canvas, model, results) {
+export function renderCanvas(canvas, model, results, avoidanceResults) {
     const ctx = canvas.getContext('2d');
     const { width, height } = canvas._logical;
     const centerX = width / 2;
@@ -119,5 +174,10 @@ export function renderCanvas(canvas, model, results) {
         drawTargetPositions(ctx, centerX, centerY, scale, rotation, results);
         drawPredictionLine(ctx, centerX, centerY, scale, rotation, results);
         drawCPA(ctx, centerX, centerY, scale, rotation, results);
+
+        if (avoidanceResults) {
+            drawAvoidancePrediction(ctx, centerX, centerY, scale, rotation, avoidanceResults);
+            drawAvoidanceCPA(ctx, centerX, centerY, scale, rotation, avoidanceResults);
+        }
     }
 }
