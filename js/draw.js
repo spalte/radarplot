@@ -48,6 +48,22 @@ export function drawArrowHead(ctx, fromX, fromY, toX, toY, color, size) {
     ctx.fill();
 }
 
+export function setupCanvas(canvas, cssHeight) {
+    const container = canvas.parentElement;
+    const cssWidth = container.getBoundingClientRect().width - 32;
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = Math.round(cssWidth * dpr);
+    canvas.height = Math.round(cssHeight * dpr);
+    canvas.style.width = cssWidth + 'px';
+    canvas.style.height = cssHeight + 'px';
+
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    return { width: cssWidth, height: cssHeight };
+}
+
 export function drawPolarGrid(ctx, centerX, centerY, maxRadius, ringCount, ringLabelFn) {
     ctx.strokeStyle = COLORS.grid;
     ctx.lineWidth = 1;

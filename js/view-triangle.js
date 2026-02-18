@@ -1,6 +1,6 @@
 import {
     COLORS, NICE_SCALES, RING_COUNT, BASE_KTS_PER_RING,
-    bearingToCanvasOffset, drawArrowHead, drawPolarGrid
+    setupCanvas, bearingToCanvasOffset, drawArrowHead, drawPolarGrid
 } from './draw.js';
 
 const MAX_CHART_KNOTS = RING_COUNT * BASE_KTS_PER_RING;
@@ -87,15 +87,12 @@ function drawOriginDot(ctx, centerX, centerY) {
 }
 
 export function resizeTriangleCanvas(canvas) {
-    const container = canvas.parentElement;
-    const rect = container.getBoundingClientRect();
-    canvas.width = rect.width - 32;
-    canvas.height = 600;
+    canvas._logical = setupCanvas(canvas, 600);
 }
 
 export function renderTriangle(canvas, model, results) {
     const ctx = canvas.getContext('2d');
-    const { width, height } = canvas;
+    const { width, height } = canvas._logical;
     const centerX = width / 2;
     const centerY = height / 2;
     const maxRadius = Math.min(width, height) / 2 - 40;

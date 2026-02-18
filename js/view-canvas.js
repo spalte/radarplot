@@ -1,4 +1,4 @@
-import { COLORS, drawArrowHead, drawPolarGrid } from './draw.js';
+import { COLORS, setupCanvas, drawArrowHead, drawPolarGrid } from './draw.js';
 
 function nmToCanvas(nmX, nmY, centerX, centerY, scale, rotationDeg) {
     const c = rotationDeg * Math.PI / 180;
@@ -96,15 +96,12 @@ const RADAR_RING_COUNT = 4;
 const NM_PER_RING = 5;
 
 export function resizeCanvas(canvas) {
-    const container = canvas.parentElement;
-    const rect = container.getBoundingClientRect();
-    canvas.width = rect.width - 32;
-    canvas.height = 600;
+    canvas._logical = setupCanvas(canvas, 600);
 }
 
 export function renderCanvas(canvas, model, results) {
     const ctx = canvas.getContext('2d');
-    const { width, height } = canvas;
+    const { width, height } = canvas._logical;
     const centerX = width / 2;
     const centerY = height / 2;
     const maxRadius = Math.min(width, height) / 2 - 40;
