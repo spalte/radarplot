@@ -90,7 +90,7 @@ export function resizeTriangleCanvas(canvas) {
     canvas._logical = setupCanvas(canvas, 600);
 }
 
-function drawAvoidanceVectors(ctx, centerX, centerY, targetEnd, model, pixelsPerKnot, rotation) {
+function drawAvoidanceVectors(ctx, centerX, centerY, targetEnd, model, avoidanceResults, pixelsPerKnot, rotation) {
     const offset = bearingToCanvasOffset(model.avoidance.course, model.avoidance.speed, pixelsPerKnot, rotation);
     const newOwnEndX = centerX + offset.dx;
     const newOwnEndY = centerY + offset.dy;
@@ -107,6 +107,11 @@ function drawAvoidanceVectors(ctx, centerX, centerY, targetEnd, model, pixelsPer
     ctx.setLineDash([]);
     drawArrowHead(ctx, centerX, centerY, newOwnEndX, newOwnEndY, COLORS.ownShip, 10);
 
+    ctx.fillStyle = COLORS.ownShip;
+    ctx.font = 'bold 11px Share Tech Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${model.avoidance.speed.toFixed(1)} nds`, newOwnEndX + 8, newOwnEndY);
+
     ctx.strokeStyle = COLORS.relative;
     ctx.lineWidth = 3;
     ctx.setLineDash([6, 4]);
@@ -116,6 +121,13 @@ function drawAvoidanceVectors(ctx, centerX, centerY, targetEnd, model, pixelsPer
     ctx.stroke();
     ctx.setLineDash([]);
     drawArrowHead(ctx, newOwnEndX, newOwnEndY, targetEnd.x, targetEnd.y, COLORS.relative, 10);
+
+    ctx.fillStyle = COLORS.relative;
+    ctx.font = 'bold 11px Share Tech Mono';
+    ctx.textAlign = 'left';
+    const midX = (newOwnEndX + targetEnd.x) / 2;
+    const midY = (newOwnEndY + targetEnd.y) / 2;
+    ctx.fillText(`Relatif' ${avoidanceResults.relative.speed.toFixed(1)} nds`, midX + 5, midY - 5);
 
     ctx.globalAlpha = 1.0;
 }
@@ -153,7 +165,7 @@ export function renderTriangle(canvas, model, results, avoidanceResults) {
     drawTrueTargetVector(ctx, centerX, centerY, targetEnd, results);
 
     if (model.avoidance.active && avoidanceResults) {
-        drawAvoidanceVectors(ctx, centerX, centerY, targetEnd, model, pixelsPerKnot, rotation);
+        drawAvoidanceVectors(ctx, centerX, centerY, targetEnd, model, avoidanceResults, pixelsPerKnot, rotation);
     }
 
     drawOriginDot(ctx, centerX, centerY);

@@ -61,16 +61,17 @@ function renderResults(results) {
     }
 }
 
-function renderAvoidanceResults(active, avoidanceResults) {
-    const cpaSection = document.getElementById('avoidanceSection');
-    const tcpaSection = document.getElementById('avoidanceTcpaSection');
-    if (!cpaSection) return;
+function renderAvoidanceResults(avoidance, avoidanceResults) {
+    const sections = document.querySelectorAll('.avoidance-divider, .avoidance-result');
+    if (!sections.length) return;
 
-    const show = active && avoidanceResults;
-    cpaSection.style.display = show ? '' : 'none';
-    tcpaSection.style.display = show ? '' : 'none';
+    const show = avoidance.active && avoidanceResults;
+    for (const el of sections) el.style.display = show ? '' : 'none';
 
     if (!show) return;
+
+    setResult('avoidRelCourse', avoidance.course.toFixed(1) + '\u00B0');
+    setResult('avoidRelSpeed', avoidance.speed.toFixed(1) + ' kts');
 
     const cpaEl = document.getElementById('avoidCpaDistance');
     cpaEl.textContent = avoidanceResults.cpa.distance.toFixed(2) + ' NM';
@@ -107,5 +108,5 @@ export function renderForm(model, results, avoidanceResults) {
     });
 
     renderResults(results);
-    renderAvoidanceResults(model.avoidance.active, avoidanceResults);
+    renderAvoidanceResults(model.avoidance, avoidanceResults);
 }
