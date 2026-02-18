@@ -3,14 +3,28 @@ import { displayToTrue } from './bearings.js';
 import { computeResults } from './calculator.js';
 import { renderForm } from './view-form.js';
 import { renderCanvas, resizeCanvas } from './view-canvas.js';
+import { renderTriangle, resizeTriangleCanvas, bestFitScaleIndex, scaleLabel } from './view-triangle.js';
 
 const model = createModel();
-const canvas = document.getElementById('radarCanvas');
+const radarCanvas = document.getElementById('radarCanvas');
+const triangleCanvas = document.getElementById('triangleCanvas');
+const scaleLabelEl = document.getElementById('scaleLabel');
 
 function render() {
     const results = computeResults(model.currentTarget, model.ownShip);
+
+    if (!model.triangleScaleManual && results) {
+        const maxSpeed = Math.max(model.ownShip.speed, results.trueTarget.speed);
+        model.triangleScaleIndex = bestFitScaleIndex(maxSpeed);
+    }
+
     renderForm(model, results);
-    renderCanvas(canvas, model, results);
+    renderCanvas(radarCanvas, model, results);
+    renderTriangle(triangleCanvas, model, results);
+
+    if (model.triangleScaleIndex !== null) {
+        scaleLabelEl.textContent = scaleLabel(model.triangleScaleIndex);
+    }
 }
 
 model.subscribe(render);
@@ -44,14 +58,19 @@ document.querySelectorAll('.target-btn').forEach((btn, i) => {
     btn.addEventListener('click', () => model.selectTarget(i));
 });
 
+document.getElementById('scaleUp').addEventListener('click', () => model.stepTriangleScale(1));
+document.getElementById('scaleDown').addEventListener('click', () => model.stepTriangleScale(-1));
+
 function handleResize() {
-    resizeCanvas(canvas);
+    resizeCanvas(radarCanvas);
+    resizeTriangleCanvas(triangleCanvas);
     render();
 }
 
 window.addEventListener('resize', handleResize);
 
 window.addEventListener('load', () => {
-    resizeCanvas(canvas);
+    resizeCanvas(radarCanvas);
+    resizeTriangleCanvas(triangleCanvas);
     model.notify();
 });
