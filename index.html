@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RADAR Maritime - Calcul de Trajectoires</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>RADAR PLOTTING</h1>
+            <div class="subtitle">CCS Groupe Lémanique</div>
+        </header>
+
+        <div class="main-grid">
+            <div>
+                <div class="panel">
+                    <h2 class="panel-title">Propre Navire</h2>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label>Mode d'Orientation</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+                            <button class="orientation-btn active" id="northUpBtn">
+                                <span style="font-size: 1.2rem;">⬆</span> North-Up
+                            </button>
+                            <button class="orientation-btn" id="headUpBtn">
+                                <span style="font-size: 1.2rem;">🧭</span> Head-Up
+                            </button>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <div>
+                            <label>Cap (°)</label>
+                            <input type="number" id="ownCourse" value="0" min="0" max="359" step="1">
+                        </div>
+                        <div>
+                            <label>Vitesse (nœuds)</label>
+                            <input type="number" id="ownSpeed" value="12" min="0" max="50" step="0.1">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel" style="margin-top: 2rem;">
+                    <h2 class="panel-title">Cibles</h2>
+                    <div class="target-selector">
+                        <button class="target-btn active">Cible 1</button>
+                        <button class="target-btn">Cible 2</button>
+                        <button class="target-btn">Cible 3</button>
+                        <button class="target-btn">Cible 4</button>
+                        <button class="target-btn">Cible 5</button>
+                    </div>
+
+                    <div class="input-group">
+                        <h3 style="color: var(--grid-blue); margin-bottom: 1rem; font-family: 'Orbitron', sans-serif;">Position 1</h3>
+                        <div class="input-row">
+                            <div>
+                                <label id="bearing1Label">Relèvement (°)</label>
+                                <input type="number" id="bearing1" value="45" min="0" max="359" step="1">
+                            </div>
+                            <div>
+                                <label>Distance (NM)</label>
+                                <input type="number" id="distance1" value="8" min="0" max="50" step="0.1">
+                            </div>
+                        </div>
+                        <div>
+                            <label>Heure (HH:MM)</label>
+                            <input type="time" id="time1" value="12:00" step="60">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <h3 style="color: var(--grid-blue); margin-bottom: 1rem; font-family: 'Orbitron', sans-serif;">Position 2</h3>
+                        <div class="input-row">
+                            <div>
+                                <label id="bearing2Label">Relèvement (°)</label>
+                                <input type="number" id="bearing2" value="50" min="0" max="359" step="1">
+                            </div>
+                            <div>
+                                <label>Distance (NM)</label>
+                                <input type="number" id="distance2" value="6" min="0" max="50" step="0.1">
+                            </div>
+                        </div>
+                        <div>
+                            <label>Heure (HH:MM)</label>
+                            <input type="time" id="time2" value="12:12" step="60">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel" style="margin-top: 2rem;">
+                    <h2 class="panel-title">Résultats</h2>
+                    <div class="results" id="results">
+                        <div class="result-item">
+                            <span class="result-label">cBr Cap Relatif Cible:</span>
+                            <span class="result-value" id="targetCourse">---</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">vBr Vitesse Relatif Cible:</span>
+                            <span class="result-value" id="targetSpeed">---</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">CPA (Distance):</span>
+                            <span class="result-value" id="cpaDistance">---</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">TCPA (Temps):</span>
+                            <span class="result-value" id="tcpaTime">---</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">cB Cap Vrai Cible :</span>
+                            <span class="result-value" id="targetCourseTrue">---</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">vB Vitesse Vrai Cible:</span>
+                            <span class="result-value" id="targetSpeedTrue">---</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="radar-canvas-container">
+                    <canvas id="radarCanvas"></canvas>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #00ff41;"></div>
+                            <span>Vecteur Propre (Vert)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #ffa500;"></div>
+                            <span>Positions Cible</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #4a90e2;"></div>
+                            <span>Vecteur Relatif (Bleu)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #ff3b3b;"></div>
+                            <span>Vecteur Vrai (Rouge)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #a855f7;"></div>
+                            <span>CPA (Violet)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
