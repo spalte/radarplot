@@ -123,6 +123,7 @@ export function computeAvoidanceResults(results, newCourse, newSpeed, avoidanceD
     const deltaTime = p1p2Dist / relative.speed;
     const timeToManeuverHours = s * deltaTime;
     const totalTcpaHours = timeToManeuverHours + clampedT;
+    const remainingTime = Math.max(0, 1 - timeToManeuverHours);
 
     return {
         maneuverNeeded,
@@ -140,8 +141,8 @@ export function computeAvoidanceResults(results, newCourse, newSpeed, avoidanceD
             tcpaMinutes: totalTcpaHours * 60
         },
         prediction: {
-            x: maneuverPoint.x + newRelVel.x,
-            y: maneuverPoint.y + newRelVel.y
+            x: maneuverPoint.x + newRelVel.x * remainingTime,
+            y: maneuverPoint.y + newRelVel.y * remainingTime
         }
     };
 }
