@@ -89,6 +89,10 @@ h1 {
     gap: 0 2rem;
 }
 
+.panel-targets > * {
+    min-width: 0;
+}
+
 .panel-targets .panel-title,
 .panel-targets .target-selector {
     grid-column: 1 / -1;
@@ -149,7 +153,6 @@ h1 {
 .input-group {
     margin-bottom: 1.5rem;
     min-width: 0;
-    overflow: hidden;
 }
 
 .input-row {
@@ -180,9 +183,15 @@ input[type="number"] {
     transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
 }
 
+.time-input-wrapper {
+    display: grid;
+    grid-template-columns: 1fr;
+    min-width: 0;
+}
+
 input[type="time"] {
-    width: 100%;
-    max-width: 100%;
+    min-width: 0;
+    width: auto;
     padding: 0.8rem;
     background: rgba(10, 25, 41, 0.8);
     border: 1px solid var(--ocean-light);

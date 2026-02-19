@@ -537,7 +537,7 @@ function drawFrame(wallNow) {
     const avoidDistNM = (avoidBD && t > state.tManeuver) ? avoidBD.distance : null;
     drawLiveDistance(ctx, mainBD.distance, avoidDistNM);
 
-    const radarR = Math.min(Math.max(Math.min(canvasW, canvasH) * 0.14, 40), 110);
+    const radarR = Math.min(Math.max(Math.min(canvasW, canvasH) * 0.14, 30), 110);
     const margin = radarR + 30;
     const showRadars = canvasW >= margin * 2 && canvasH >= margin * 2;
 
@@ -729,7 +729,7 @@ export function updateAnimation(canvas, model, results, avoidanceResults) {
     const bboxH = bbox.maxY - bbox.minY;
     const scaleX = logical.width / bboxW;
     const scaleY = logical.height / bboxH;
-    const pixelsPerNM = Math.min(scaleX, scaleY) / 1.3;
+    const pixelsPerNM = Math.min(scaleX, scaleY);
 
     state = {
         canvas,
