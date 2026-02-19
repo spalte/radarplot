@@ -510,19 +510,24 @@ button:active {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 59, 59, 0.15);
-    border: 1px solid var(--warning-red);
+    background: transparent;
+    border: none;
     border-radius: 4px;
-    color: var(--warning-red);
-    font-size: 1.2rem;
-    font-weight: 700;
+    color: var(--text-secondary);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.5rem;
+    font-weight: 400;
     cursor: pointer;
-    transition: background 0.2s ease;
-    line-height: 1;
+    transition: color 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+    line-height: 0;
+    text-align: center;
+    opacity: 0.6;
 }
 
 .avoidance-exit-btn:hover {
-    background: rgba(255, 59, 59, 0.35);
+    opacity: 1;
+    color: var(--warning-red);
+    background: rgba(255, 255, 255, 0.06);
     transform: none;
 }
 
