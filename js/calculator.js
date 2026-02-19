@@ -98,7 +98,6 @@ export function computeAvoidanceResults(results, newCourse, newSpeed, avoidanceD
         else if (s2 >= -1e-9) s = Math.max(0, s2);
     }
 
-
     const maneuverPoint = {
         x: pos2.x + s * dx,
         y: pos2.y + s * dy

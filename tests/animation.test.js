@@ -5,7 +5,9 @@ import {
     computeTargetPosition,
     computeAvoidanceOwnPosition,
     computeTimeline,
-    computeBoundingBox
+    computeBoundingBox,
+    computeBearingAndDistance,
+    lerpAngle
 } from '../js/view-animation.js';
 import { polarToCartesian, computeResults } from '../js/calculator.js';
 
@@ -198,6 +200,76 @@ describe('computeBoundingBox', () => {
         assert.ok(isFinite(bbox.maxX), 'should be finite');
         assert.ok(bbox.maxX > bbox.minX, 'should have nonzero width');
         assert.ok(bbox.maxY > bbox.minY, 'should have nonzero height');
+    });
+});
+
+describe('computeBearingAndDistance', () => {
+    it('target due north gives bearing 0', () => {
+        const own = { x: 0, y: 0 };
+        const tgt = { x: 0, y: 5 };
+        const { bearing, distance } = computeBearingAndDistance(own, tgt);
+        assertClose(bearing, 0);
+        assertClose(distance, 5);
+    });
+
+    it('target due east gives bearing 90', () => {
+        const own = { x: 0, y: 0 };
+        const tgt = { x: 3, y: 0 };
+        const { bearing, distance } = computeBearingAndDistance(own, tgt);
+        assertClose(bearing, 90);
+        assertClose(distance, 3);
+    });
+
+    it('target due south gives bearing 180', () => {
+        const own = { x: 0, y: 0 };
+        const tgt = { x: 0, y: -4 };
+        const { bearing, distance } = computeBearingAndDistance(own, tgt);
+        assertClose(bearing, 180);
+        assertClose(distance, 4);
+    });
+
+    it('target due west gives bearing 270', () => {
+        const own = { x: 0, y: 0 };
+        const tgt = { x: -2, y: 0 };
+        const { bearing, distance } = computeBearingAndDistance(own, tgt);
+        assertClose(bearing, 270);
+        assertClose(distance, 2);
+    });
+
+    it('same position gives distance 0', () => {
+        const pos = { x: 3, y: 7 };
+        const { distance } = computeBearingAndDistance(pos, pos);
+        assertClose(distance, 0);
+    });
+
+    it('northeast target gives bearing ~45 and correct distance', () => {
+        const own = { x: 1, y: 1 };
+        const tgt = { x: 4, y: 4 };
+        const { bearing, distance } = computeBearingAndDistance(own, tgt);
+        assertClose(bearing, 45);
+        assertCloseLoose(distance, Math.sqrt(18), 1e-9);
+    });
+});
+
+describe('lerpAngle', () => {
+    it('returns fromDeg at t=0', () => {
+        assertClose(lerpAngle(10, 50, 0), 10);
+    });
+
+    it('returns toDeg at t=1', () => {
+        assertClose(lerpAngle(10, 50, 1), 50);
+    });
+
+    it('interpolates midpoint', () => {
+        assertClose(lerpAngle(0, 90, 0.5), 45);
+    });
+
+    it('takes shortest arc across 360/0 boundary', () => {
+        assertClose(lerpAngle(350, 10, 0.5), 0);
+    });
+
+    it('takes shortest arc the other way', () => {
+        assertClose(lerpAngle(10, 350, 0.5), 0);
     });
 });
 

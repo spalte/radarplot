@@ -8,6 +8,7 @@ const BBOX_PADDING = 0.15;
 const WAKE_LENGTH_PX = 30;
 const HULL_LENGTH_PX = 20;
 const CPA_FLASH_DURATION_SEC = 1.5;
+const HEADING_TRANSITION_FRAC = 0.03;
 
 // ── Pure computation functions (exported for testing) ──
 
@@ -34,6 +35,19 @@ export function computeTimeline(tcpaMinutes, tcpaAvoidMinutes) {
     const lastCpa = tCpaAvoid != null ? Math.max(tCpa, tCpaAvoid) : tCpa;
     const tEnd = lastCpa * (1 + POST_CPA_FRACTION);
     return { tStart: 0, tCpa, tEnd };
+}
+
+export function lerpAngle(fromDeg, toDeg, t) {
+    let diff = ((toDeg - fromDeg) % 360 + 540) % 360 - 180;
+    return (fromDeg + diff * t + 360) % 360;
+}
+
+export function computeBearingAndDistance(ownPos, targetPos) {
+    const dx = targetPos.x - ownPos.x;
+    const dy = targetPos.y - ownPos.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const bearing = (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360;
+    return { bearing, distance: dist };
 }
 
 export function computeBoundingBox(points) {
@@ -66,6 +80,7 @@ let flashEvents = [];
 let controls = null;
 
 function resetPlayback() {
+    playing = false;
     simTime = 0;
     wallStart = null;
     flashEvents = [];
@@ -176,9 +191,9 @@ function drawGrid(ctx) {
 }
 
 function drawNorthArrow(ctx) {
-    const { canvasW } = state;
+    const { canvasW, canvasH } = state;
     const ax = canvasW - 30;
-    const ay = 35;
+    const ay = canvasH - 25;
     const len = 22;
 
     ctx.strokeStyle = COLORS.white;
@@ -200,6 +215,84 @@ function drawNorthArrow(ctx) {
     ctx.font = 'bold 13px Orbitron';
     ctx.textAlign = 'center';
     ctx.fillText('N', ax, ay - len / 2 - 8);
+}
+
+// ── Mini radar overlay ──
+
+const MINI_RADAR_RANGE_NM = 6;
+const MINI_RADAR_RINGS = 4;
+
+function drawMiniRadar(ctx, cx, cy, radius, targetBearing, targetDist, heading, speed, orientationMode, alpha, label) {
+    const rotation = orientationMode === 'head-up' ? heading : 0;
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    ctx.fillStyle = 'rgba(10, 25, 41, 0.85)';
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius + 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.clip();
+
+    ctx.strokeStyle = COLORS.grid;
+    ctx.lineWidth = 0.8;
+    for (let i = 1; i <= MINI_RADAR_RINGS; i++) {
+        const r = (radius / MINI_RADAR_RINGS) * i;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    const headingRad = (heading - rotation) * DEG_TO_RAD;
+    const hlX = cx + radius * Math.sin(headingRad);
+    const hlY = cy - radius * Math.cos(headingRad);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(hlX, hlY);
+    ctx.stroke();
+
+    const pixelsPerNM = radius / MINI_RADAR_RANGE_NM;
+    const blipBearingRad = (targetBearing - rotation) * DEG_TO_RAD;
+    const blipR = targetDist * pixelsPerNM;
+    const blipX = cx + blipR * Math.sin(blipBearingRad);
+    const blipY = cy - blipR * Math.cos(blipBearingRad);
+
+    ctx.fillStyle = COLORS.trueVector;
+    ctx.beginPath();
+    ctx.arc(blipX, blipY, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+
+    ctx.strokeStyle = 'rgba(74, 144, 226, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = COLORS.gridLabel;
+    if (label) {
+        ctx.font = 'bold 10px Share Tech Mono';
+        ctx.fillText(`${label} \u2013 ${MINI_RADAR_RANGE_NM} NM`, cx, cy - radius - 6);
+    } else {
+        ctx.font = '9px Share Tech Mono';
+        ctx.fillText(`${MINI_RADAR_RANGE_NM} NM`, cx, cy - radius - 6);
+    }
+
+    let labelY = cy + radius + 14;
+    ctx.font = '10px Share Tech Mono';
+    ctx.fillText(`Cap : ${Math.round(heading)}\u00B0`, cx, labelY);
+    labelY += 13;
+    ctx.fillText(`Vit : ${speed.toFixed(1)} kts`, cx, labelY);
 }
 
 // ── Boat hull glyph ──
@@ -230,7 +323,6 @@ function drawBoatHull(ctx, px, py, headingDeg, color, alpha) {
     ctx.lineWidth = 0.8;
     ctx.stroke();
 
-    ctx.globalAlpha = 1;
     ctx.restore();
 }
 
@@ -284,23 +376,21 @@ function buildFlashEvents() {
     flashEvents.push({
         simT: timeline.tCpa,
         wallStart: null,
-        label: `CPA: ${state.cpaDistance.toFixed(1)} NM`,
+        label: `CPA : ${state.cpaDistance.toFixed(1)} NM`,
         color: COLORS.cpa,
         p1: () => nmToPixel(ownAtCpa.x, ownAtCpa.y),
         p2: () => nmToPixel(targetAtCpa.x, targetAtCpa.y)
     });
 
     if (state.avoidVelocity) {
-        const targetAtManeuver = computeTargetPosition(pos2, targetVelocity, state.tManeuver);
         const ownAtManeuver = computeOwnPosition(ownVelocity, state.tManeuver);
-        const mDx = targetAtManeuver.x - ownAtManeuver.x;
-        const mDy = targetAtManeuver.y - ownAtManeuver.y;
-        const maneuverDist = Math.sqrt(mDx * mDx + mDy * mDy);
+        const targetAtManeuver = computeTargetPosition(pos2, targetVelocity, state.tManeuver);
+        const maneuverDist = computeBearingAndDistance(ownAtManeuver, targetAtManeuver).distance;
 
         flashEvents.push({
             simT: state.tManeuver,
             wallStart: null,
-            label: `Manoeuvre: ${maneuverDist.toFixed(1)} NM`,
+            label: `Manœuvre : ${maneuverDist.toFixed(1)} NM`,
             color: COLORS.ownShip,
             p1: () => nmToPixel(ownAtManeuver.x, ownAtManeuver.y),
             p2: () => nmToPixel(targetAtManeuver.x, targetAtManeuver.y)
@@ -313,7 +403,7 @@ function buildFlashEvents() {
         flashEvents.push({
             simT: state.tCpaAvoid,
             wallStart: null,
-            label: `CPA': ${state.cpaAvoidDistance.toFixed(1)} NM`,
+            label: `CPA' : ${state.cpaAvoidDistance.toFixed(1)} NM`,
             color: COLORS.cpa,
             p1: () => nmToPixel(avoidOwnAtCpa.x, avoidOwnAtCpa.y),
             p2: () => nmToPixel(targetAtCpaAvoid.x, targetAtCpaAvoid.y)
@@ -330,12 +420,9 @@ function triggerFlashes(wallNow) {
 }
 
 function anyFlashActive(wallNow) {
-    for (const ev of flashEvents) {
-        if (ev.wallStart !== null && (wallNow - ev.wallStart) / 1000 <= CPA_FLASH_DURATION_SEC) {
-            return true;
-        }
-    }
-    return false;
+    return flashEvents.some(ev =>
+        ev.wallStart !== null && (wallNow - ev.wallStart) / 1000 <= CPA_FLASH_DURATION_SEC
+    );
 }
 
 function drawFlashes(ctx, wallNow) {
@@ -379,24 +466,24 @@ function drawFlashes(ctx, wallNow) {
 // ── Live distance display ──
 
 function drawLiveDistance(ctx, distNM, avoidDistNM) {
-    const { canvasW } = state;
-    const x = canvasW - 10;
-    const y = 75;
+    const { canvasH } = state;
+    const x = 10;
     const lineH = 18;
     const rows = avoidDistNM !== null ? 2 : 1;
     const boxW = 130;
+    const y = canvasH - 10 - lineH * (rows - 1);
 
     ctx.fillStyle = 'rgba(10, 25, 41, 0.8)';
-    ctx.fillRect(x - boxW - 6, y - 14, boxW + 12, lineH * rows + 4);
+    ctx.fillRect(x - 6, y - 14, boxW + 12, lineH * rows + 4);
 
     ctx.font = '12px Share Tech Mono';
-    ctx.textAlign = 'right';
+    ctx.textAlign = 'left';
     ctx.fillStyle = COLORS.white;
-    ctx.fillText(`Dist: ${distNM.toFixed(2)} NM`, x, y);
+    ctx.fillText(`Dist : ${distNM.toFixed(2)} NM`, x, y);
 
     if (avoidDistNM !== null) {
         ctx.fillStyle = 'rgba(224, 242, 255, 0.6)';
-        ctx.fillText(`Dist': ${avoidDistNM.toFixed(2)} NM`, x, y + lineH);
+        ctx.fillText(`Dist' : ${avoidDistNM.toFixed(2)} NM`, x, y + lineH);
     }
 }
 
@@ -422,14 +509,16 @@ function drawFrame(wallNow) {
     const ownPx = nmToPixel(ownPos.x, ownPos.y);
     const targetPx = nmToPixel(targetPos.x, targetPos.y);
 
+    let avoidPos = null;
+    let avoidCourseNow = ownCourse;
     if (state.avoidVelocity) {
-        const avoidPos = computeAvoidanceOwnPosition(
+        avoidPos = computeAvoidanceOwnPosition(
             ownVelocity, state.avoidVelocity, state.tManeuver, t
         );
-        const avoidCourse = t <= state.tManeuver ? ownCourse : state.avoidCourse;
+        avoidCourseNow = t <= state.tManeuver ? ownCourse : state.avoidCourse;
         const avoidPx = nmToPixel(avoidPos.x, avoidPos.y);
-        drawWake(ctx, avoidPx.px, avoidPx.py, avoidCourse, COLORS.ownShip, 0.25);
-        drawBoatHull(ctx, avoidPx.px, avoidPx.py, avoidCourse, COLORS.ownShip, 0.25);
+        drawWake(ctx, avoidPx.px, avoidPx.py, avoidCourseNow, COLORS.ownShip, 0.25);
+        drawBoatHull(ctx, avoidPx.px, avoidPx.py, avoidCourseNow, COLORS.ownShip, 0.25);
     }
 
     drawWake(ctx, ownPx.px, ownPx.py, ownCourse, COLORS.ownShip, 1);
@@ -438,23 +527,43 @@ function drawFrame(wallNow) {
     drawWake(ctx, targetPx.px, targetPx.py, targetCourse, COLORS.trueVector, 1);
     drawBoatHull(ctx, targetPx.px, targetPx.py, targetCourse, COLORS.trueVector, 1);
 
-    drawFlashes(ctx, wallNow);
+    const mainBD = computeBearingAndDistance(ownPos, targetPos);
 
-    const dx = targetPos.x - ownPos.x;
-    const dy = targetPos.y - ownPos.y;
-    const distNM = Math.sqrt(dx * dx + dy * dy);
-
-    let avoidDistNM = null;
-    if (state.avoidVelocity && t > state.tManeuver) {
-        const avoidPos = computeAvoidanceOwnPosition(
-            ownVelocity, state.avoidVelocity, state.tManeuver, t
-        );
-        const adx = targetPos.x - avoidPos.x;
-        const ady = targetPos.y - avoidPos.y;
-        avoidDistNM = Math.sqrt(adx * adx + ady * ady);
+    let avoidBD = null;
+    if (avoidPos) {
+        avoidBD = computeBearingAndDistance(avoidPos, targetPos);
     }
 
-    drawLiveDistance(ctx, distNM, avoidDistNM);
+    const avoidDistNM = (avoidBD && t > state.tManeuver) ? avoidBD.distance : null;
+    drawLiveDistance(ctx, mainBD.distance, avoidDistNM);
+
+    const radarR = Math.min(Math.max(Math.min(canvasW, canvasH) * 0.14, 40), 110);
+    const margin = radarR + 30;
+    const showRadars = canvasW >= margin * 2 && canvasH >= margin * 2;
+
+    if (showRadars) {
+        drawMiniRadar(ctx, margin, margin, radarR,
+            mainBD.bearing, mainBD.distance, ownCourse,
+            state.ownSpeed, state.orientationMode, 1, null);
+
+        if (state.avoidVelocity) {
+            const avoidAlpha = t > state.tManeuver ? 1 : 0.45;
+
+            let radarHeading = avoidCourseNow;
+            const duration = state.timeline.tEnd * HEADING_TRANSITION_FRAC;
+            const elapsed = t - state.tManeuver;
+            if (elapsed > 0 && elapsed < duration) {
+                radarHeading = lerpAngle(ownCourse, state.avoidCourse, elapsed / duration);
+            }
+
+            drawMiniRadar(ctx, canvasW - margin, margin, radarR,
+                avoidBD.bearing, avoidBD.distance, radarHeading,
+                state.avoidSpeed, state.orientationMode,
+                avoidAlpha, '\u00C9vitement');
+        }
+    }
+
+    drawFlashes(ctx, wallNow);
 }
 
 // ── Animation loop ──
@@ -522,10 +631,6 @@ export function setAnimationControls(elements) {
     controls = elements;
 }
 
-export function isPlaying() {
-    return playing;
-}
-
 export function togglePlayback() {
     if (!state) return;
     if (playing) {
@@ -568,7 +673,6 @@ export function seekTo(fraction) {
 
 export function updateAnimation(canvas, model, results, avoidanceResults) {
     resetPlayback();
-    playing = false;
 
     if (!results || results.cpa.tcpaMinutes <= 0) {
         state = null;
@@ -637,10 +741,13 @@ export function updateAnimation(canvas, model, results, avoidanceResults) {
         targetVelocity,
         pos2,
         ownCourse: model.ownShip.course,
+        ownSpeed: model.ownShip.speed,
         targetCourse: results.trueTarget.course,
+        orientationMode: model.orientationMode,
         timeline,
         avoidVelocity,
         avoidCourse,
+        avoidSpeed: model.avoidance.speed,
         tManeuver,
         cpaDistance: results.cpa.distance,
         tCpaAvoid,
