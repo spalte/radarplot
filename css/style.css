@@ -100,7 +100,7 @@ h1 {
 
 .main-grid {
     display: grid;
-    grid-template-columns: minmax(250px, 300px) 1fr 1fr;
+    grid-template-columns: minmax(250px, 330px) 1fr 1fr;
     grid-template-areas:
         "form     targets  targets"
         "results  radar    triangle";
@@ -346,6 +346,7 @@ button:active {
     font-weight: 700;
     font-size: 0.85rem;
     text-align: right;
+    flex: 1 1 auto;
 }
 
 .result-value.warning {
