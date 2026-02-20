@@ -87,7 +87,14 @@
             </div>
 
             <div class="radar-canvas-container">
-                <h2 class="panel-title">Radar</h2>
+                <h2 class="panel-title">
+                    <span>Radar</span>
+                    <span class="scale-control">
+                        <button class="scale-btn" id="radarRangeDown">&minus;</button>
+                        <span class="scale-label" id="radarRangeLabel">24 NM</span>
+                        <button class="scale-btn" id="radarRangeUp">+</button>
+                    </span>
+                </h2>
                 <canvas id="radarCanvas"></canvas>
                 <div class="legend">
                     <div class="legend-item">

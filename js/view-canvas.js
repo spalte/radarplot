@@ -1,5 +1,5 @@
 import { DEG_TO_RAD, MIN_MOVEMENT_SPEED } from './constants.js';
-import { COLORS, setupCanvas, getCanvasLogical, drawArrowHead, drawPolarGrid } from './draw.js';
+import { COLORS, RADAR_RANGES, setupCanvas, getCanvasLogical, drawArrowHead, drawPolarGrid } from './draw.js';
 
 function createViewTransform(centerX, centerY, scale, rotation) {
     const c = rotation * DEG_TO_RAD;
@@ -159,9 +159,6 @@ function drawAvoidanceCPA(ctx, vt, avoidanceResults) {
     ctx.globalAlpha = 1.0;
 }
 
-const RADAR_RING_COUNT = 4;
-const NM_PER_RING = 5;
-
 export function resizeCanvas(canvas) {
     setupCanvas(canvas);
 }
@@ -172,15 +169,17 @@ export function renderCanvas(canvas, model, results, avoidanceResults) {
     const centerX = width / 2;
     const centerY = height / 2;
     const maxRadius = Math.min(width, height) / 2 - 40;
-    const scale = maxRadius / 20;
+    const { range, rings } = RADAR_RANGES[model.radarRangeIndex];
+    const scale = maxRadius / range;
     const rotation = model.orientationMode === 'head-up' ? model.ownShip.course : 0;
     const vt = createViewTransform(centerX, centerY, scale, rotation);
 
     ctx.fillStyle = COLORS.background;
     ctx.fillRect(0, 0, width, height);
 
-    const radarRingLabel = (i) => `${i * NM_PER_RING} NM`;
-    drawPolarGrid(ctx, centerX, centerY, maxRadius, RADAR_RING_COUNT, radarRingLabel);
+    const nmPerRing = range / rings;
+    const radarRingLabel = (i) => `${(i * nmPerRing) % 1 === 0 ? (i * nmPerRing) : (i * nmPerRing).toFixed(1)} NM`;
+    drawPolarGrid(ctx, centerX, centerY, maxRadius, rings, radarRingLabel);
     drawHeadingLine(ctx, vt, maxRadius, model.ownShip.course);
 
     if (results) {

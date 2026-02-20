@@ -249,7 +249,7 @@ export function renderTriangle(canvas, model, results, avoidanceResults) {
     ctx.fillRect(0, 0, width, height);
 
     const ringLabel = (i) => `${i * BASE_KTS_PER_RING} kts`;
-    drawPolarGrid(ctx, centerX, centerY, maxRadius, RING_COUNT, ringLabel);
+    drawPolarGrid(ctx, centerX, centerY, maxRadius, RING_COUNT, ringLabel, { minorAngleStep: 10 });
 
     if (!results) {
         triangleState = null;

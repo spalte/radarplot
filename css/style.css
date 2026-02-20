@@ -328,6 +328,10 @@ button:active {
     text-align: center;
 }
 
+.radar-canvas-container .scale-label {
+    width: 4.5em;
+}
+
 .scale-btn {
     width: 1.3rem;
     height: 1.3rem;

@@ -1,4 +1,4 @@
-import { NICE_SCALES, RING_COUNT, BASE_KTS_PER_RING } from './draw.js';
+import { NICE_SCALES, RING_COUNT, BASE_KTS_PER_RING, RADAR_RANGES, DEFAULT_RADAR_RANGE_INDEX } from './draw.js';
 
 const MAX_CHART_KNOTS = RING_COUNT * BASE_KTS_PER_RING;
 
@@ -16,6 +16,8 @@ export function createModel() {
         currentTargetIndex: 0,
         triangleScaleIndex: null,
         triangleScaleManual: false,
+        radarRangeIndex: DEFAULT_RADAR_RANGE_INDEX,
+        radarRangeManual: false,
         avoidance: { active: false, course: 0, speed: 0, distance: 3 },
         targets: [
             { bearing1: 45, distance1: 8, time1: '12:00', bearing2: 50, distance2: 6, time2: '12:12' },
@@ -50,15 +52,38 @@ export function createModel() {
             this.triangleScaleIndex = null;
         },
 
+        resetRadarRange() {
+            this.radarRangeManual = false;
+        },
+
+        autoFitRadarRange(results) {
+            if (this.radarRangeManual || !results) return;
+            const maxDist = Math.max(
+                Math.sqrt(results.pos1.x ** 2 + results.pos1.y ** 2),
+                Math.sqrt(results.pos2.x ** 2 + results.pos2.y ** 2)
+            );
+            const idx = RADAR_RANGES.findIndex(r => r.range >= maxDist);
+            this.radarRangeIndex = idx >= 0 ? idx : RADAR_RANGES.length - 1;
+        },
+
+        stepRadarRange(delta) {
+            const maxIndex = RADAR_RANGES.length - 1;
+            this.radarRangeIndex = Math.max(0, Math.min(maxIndex, this.radarRangeIndex + delta));
+            this.radarRangeManual = true;
+            this.notify();
+        },
+
         setOwnCourse(value) {
             this.ownShip.course = value;
             this.resetTriangleScale();
+            this.resetRadarRange();
             this.notify();
         },
 
         setOwnSpeed(value) {
             this.ownShip.speed = value;
             this.resetTriangleScale();
+            this.resetRadarRange();
             this.notify();
         },
 
@@ -70,12 +95,14 @@ export function createModel() {
         selectTarget(index) {
             this.currentTargetIndex = index;
             this.resetTriangleScale();
+            this.resetRadarRange();
             this.notify();
         },
 
         updateCurrentTarget(field, value) {
             this.targets[this.currentTargetIndex][field] = value;
             this.resetTriangleScale();
+            this.resetRadarRange();
             this.notify();
         },
 
