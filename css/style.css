@@ -545,7 +545,7 @@ button:active {
 }
 
 .avoidance-controls input[type="number"] {
-    width: 4.5rem;
+    width: 3.2rem;
     padding: 0.35rem 0.5rem;
     font-size: 0.85rem;
     background: rgba(10, 25, 41, 0.8);
