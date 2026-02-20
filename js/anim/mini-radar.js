@@ -2,7 +2,7 @@ import { DEG_TO_RAD } from '../constants.js';
 import { COLORS } from '../draw.js';
 
 const MINI_RADAR_RANGE_NM = 6;
-const MINI_RADAR_RINGS = 4;
+const MINI_RADAR_RING_NM = [2, 4];
 
 export function drawMiniRadar(ctx, config) {
     const { cx, cy, radius, targetBearing, targetDist, heading, speed, orientationMode, alpha, label } = config;
@@ -23,10 +23,20 @@ export function drawMiniRadar(ctx, config) {
 
     ctx.strokeStyle = COLORS.grid;
     ctx.lineWidth = 0.8;
-    for (let i = 1; i <= MINI_RADAR_RINGS; i++) {
-        const r = (radius / MINI_RADAR_RINGS) * i;
+    const pixelPerNM = radius / MINI_RADAR_RANGE_NM;
+    for (const nm of MINI_RADAR_RING_NM) {
         ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.arc(cx, cy, nm * pixelPerNM, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    for (let angle = 0; angle < 360; angle += 30) {
+        const rad = (angle - rotation) * DEG_TO_RAD;
+        const dx = Math.sin(rad);
+        const dy = -Math.cos(rad);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + radius * dx, cy + radius * dy);
         ctx.stroke();
     }
 
@@ -40,9 +50,8 @@ export function drawMiniRadar(ctx, config) {
     ctx.lineTo(hlX, hlY);
     ctx.stroke();
 
-    const pixelsPerNM = radius / MINI_RADAR_RANGE_NM;
     const blipBearingRad = (targetBearing - rotation) * DEG_TO_RAD;
-    const blipR = targetDist * pixelsPerNM;
+    const blipR = targetDist * pixelPerNM;
     const blipX = cx + blipR * Math.sin(blipBearingRad);
     const blipY = cy - blipR * Math.cos(blipBearingRad);
 

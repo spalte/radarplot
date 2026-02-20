@@ -60,7 +60,7 @@ function drawRelativeVector(ctx, tt, fromX, fromY, results) {
     const endX = fromX + offset.dx;
     const endY = fromY + offset.dy;
     drawVector(ctx, fromX, fromY, endX, endY, COLORS.relative, {
-        label: `Relatif ${results.relative.speed.toFixed(1)} kts`, labelPos: 'mid',
+        label: `${results.relative.speed.toFixed(1)} kts`, labelPos: 'mid',
     });
     return { x: endX, y: endY };
 }
@@ -68,7 +68,7 @@ function drawRelativeVector(ctx, tt, fromX, fromY, results) {
 function drawTrueTargetVector(ctx, centerX, centerY, targetEnd, results) {
     drawVector(ctx, centerX, centerY, targetEnd.x, targetEnd.y, COLORS.trueVector, {
         dash: [8, 4],
-        label: `Vrai ${results.trueTarget.speed.toFixed(1)} kts`, labelPos: 'end-right',
+        label: `${results.trueTarget.speed.toFixed(1)} kts`, labelPos: 'end-right',
     });
 }
 
@@ -94,7 +94,7 @@ function drawAvoidanceVectors(ctx, tt, targetEnd, model, avoidanceResults) {
         ...opts, label: `${model.avoidance.speed.toFixed(1)} kts`,
     });
     drawVector(ctx, newOwnEndX, newOwnEndY, targetEnd.x, targetEnd.y, COLORS.relative, {
-        ...opts, label: `Relatif' ${avoidanceResults.relative.speed.toFixed(1)} kts`, labelPos: 'mid',
+        ...opts, label: `${avoidanceResults.relative.speed.toFixed(1)} kts`, labelPos: 'mid',
     });
     ctx.globalAlpha = 1.0;
 }
