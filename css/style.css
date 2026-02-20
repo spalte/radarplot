@@ -80,23 +80,48 @@ h1 {
     position: absolute;
     top: 0;
     right: 0;
-    width: auto;
-    padding: 0.4rem 1.2rem;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: rgba(45, 70, 99, 0.6);
     border: 1px solid var(--ocean-light);
     border-radius: 6px;
-    color: var(--text-secondary);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.8rem;
-    font-weight: 400;
-    letter-spacing: 0.05em;
-    text-transform: none;
+    font-size: 1rem;
+    line-height: 1;
     cursor: pointer;
-    transition: color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .copy-link-btn:active {
     transform: none;
+}
+
+.copy-link-label {
+    display: none;
+}
+
+@media (min-width: 1100px) {
+    .copy-link-btn {
+        width: auto;
+        height: auto;
+        padding: 0.4rem 1.2rem;
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        letter-spacing: 0.05em;
+    }
+
+    .copy-link-icon {
+        display: none;
+    }
+
+    .copy-link-label {
+        display: inline;
+    }
 }
 
 .panel-own-ship              { grid-area: form; }

@@ -85,10 +85,13 @@ setupTriangleInteraction(triangleCanvas, model);
 
 document.getElementById('copyLinkBtn').addEventListener('click', () => {
     navigator.clipboard.writeText(window.location.href).then(() => {
-        const btn = document.getElementById('copyLinkBtn');
-        const original = btn.textContent;
-        btn.textContent = 'Lien copié !';
-        setTimeout(() => { btn.textContent = original; }, 2000);
+        const icon = document.querySelector('.copy-link-icon');
+        const label = document.querySelector('.copy-link-label');
+        const origIcon = icon.textContent;
+        const origLabel = label.textContent;
+        icon.textContent = '\u2713';
+        label.textContent = 'Lien copi\u00e9 !';
+        setTimeout(() => { icon.textContent = origIcon; label.textContent = origLabel; }, 1500);
     });
 });
 
