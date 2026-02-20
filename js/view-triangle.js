@@ -251,11 +251,6 @@ export function renderTriangle(canvas, model, results, avoidanceResults) {
     const ringLabel = (i) => `${i * BASE_KTS_PER_RING} kts`;
     drawPolarGrid(ctx, centerX, centerY, maxRadius, RING_COUNT, ringLabel);
 
-    ctx.fillStyle = COLORS.triangleTitle;
-    ctx.font = 'bold 12px Orbitron';
-    ctx.textAlign = 'center';
-    ctx.fillText('TRIANGLE DES VITESSES', centerX, 25);
-
     if (!results) {
         triangleState = null;
         drawOriginDot(ctx, centerX, centerY);

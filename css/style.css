@@ -81,8 +81,6 @@ h1 {
 .triangle-canvas-container   { grid-area: triangle; }
 .panel-results               { grid-area: results; }
 
-.panel-results .panel-title  { font-size: 1.1rem; }
-
 .panel-targets {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -140,14 +138,26 @@ h1 {
 
 .panel-title {
     font-family: 'Orbitron', sans-serif;
-    font-size: 1.3rem;
+    font-size: 0.7rem;
     font-weight: 700;
     color: var(--radar-green);
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.8rem;
-    border-bottom: 2px solid var(--ocean-light);
     letter-spacing: 0.1em;
     text-transform: uppercase;
+    background: rgba(0, 255, 65, 0.06);
+    border-bottom: 1px solid rgba(0, 255, 65, 0.15);
+    border-radius: 10px 10px 0 0;
+}
+
+.panel > .panel-title {
+    margin: -1.5rem -1.5rem 0.8rem;
+    padding: 0.35rem 1rem;
+}
+
+.radar-canvas-container > .panel-title,
+.triangle-canvas-container > .panel-title,
+.animation-panel > .panel-title {
+    margin: -1rem -1rem 0.8rem;
+    padding: 0.35rem 1rem;
 }
 
 .input-group {
@@ -606,18 +616,6 @@ button:active {
         0 12px 48px rgba(0, 0, 0, 0.5),
         inset 0 0 50px rgba(0, 255, 65, 0.05),
         0 0 20px rgba(74, 144, 226, 0.2);
-}
-
-.animation-panel .panel-title {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--radar-green);
-    margin-bottom: 1rem;
-    padding-bottom: 0.8rem;
-    border-bottom: 2px solid var(--ocean-light);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
 }
 
 #animationCanvas {

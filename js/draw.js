@@ -34,7 +34,6 @@ export const COLORS = {
     trueVector: '#ff3b3b',
     cpa: '#a855f7',
     white: '#ffffff',
-    triangleTitle: 'rgba(148, 184, 216, 0.8)',
 };
 
 export function bearingToCanvasOffset(bearingDeg, magnitude, pixelScale, rotationDeg) {
