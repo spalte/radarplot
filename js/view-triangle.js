@@ -1,10 +1,8 @@
 import { DEG_TO_RAD, RAD_TO_DEG, normalizeBearing } from './constants.js';
 import {
-    COLORS, NICE_SCALES, RING_COUNT, BASE_KTS_PER_RING,
+    COLORS, NICE_SCALES, RING_COUNT, BASE_KTS_PER_RING, MAX_CHART_KNOTS,
     setupCanvas, getCanvasLogical, bearingToCanvasOffset, drawArrowHead, drawPolarGrid,
 } from './draw.js';
-
-const MAX_CHART_KNOTS = RING_COUNT * BASE_KTS_PER_RING;
 
 let triangleState = null;
 
@@ -18,8 +16,31 @@ export function renderScaleLabel(el, scaleIndex) {
     }
 }
 
-function createTriangleTransform(centerX, centerY, pixelsPerKnot, rotation) {
-    return { centerX, centerY, pixelsPerKnot, rotation };
+function drawVector(ctx, x1, y1, x2, y2, color, { lineWidth = 4, dash, arrowSize = 12, label, labelPos = 'end' } = {}) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    if (dash) ctx.setLineDash(dash);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    if (dash) ctx.setLineDash([]);
+    drawArrowHead(ctx, x1, y1, x2, y2, color, arrowSize);
+
+    if (label) {
+        ctx.fillStyle = color;
+        ctx.font = 'bold 11px Share Tech Mono';
+        if (labelPos === 'mid') {
+            ctx.textAlign = 'left';
+            ctx.fillText(label, (x1 + x2) / 2 + 5, (y1 + y2) / 2 - 5);
+        } else if (labelPos === 'end-right') {
+            ctx.textAlign = 'right';
+            ctx.fillText(label, x2 - 8, y2);
+        } else {
+            ctx.textAlign = 'left';
+            ctx.fillText(label, x2 + 8, y2);
+        }
+    }
 }
 
 function drawOwnShipVector(ctx, tt, model) {
@@ -28,20 +49,9 @@ function drawOwnShipVector(ctx, tt, model) {
     const offset = bearingToCanvasOffset(model.ownShip.course, model.ownShip.speed, tt.pixelsPerKnot, tt.rotation);
     const endX = tt.centerX + offset.dx;
     const endY = tt.centerY + offset.dy;
-
-    ctx.strokeStyle = COLORS.ownShip;
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(tt.centerX, tt.centerY);
-    ctx.lineTo(endX, endY);
-    ctx.stroke();
-    drawArrowHead(ctx, tt.centerX, tt.centerY, endX, endY, COLORS.ownShip, 12);
-
-    ctx.fillStyle = COLORS.ownShip;
-    ctx.font = 'bold 11px Share Tech Mono';
-    ctx.textAlign = 'left';
-    ctx.fillText(`${model.ownShip.speed.toFixed(1)} kts`, endX + 8, endY);
-
+    drawVector(ctx, tt.centerX, tt.centerY, endX, endY, COLORS.ownShip, {
+        label: `${model.ownShip.speed.toFixed(1)} kts`,
+    });
     return { x: endX, y: endY };
 }
 
@@ -49,40 +59,17 @@ function drawRelativeVector(ctx, tt, fromX, fromY, results) {
     const offset = bearingToCanvasOffset(results.relative.course, results.relative.speed, tt.pixelsPerKnot, tt.rotation);
     const endX = fromX + offset.dx;
     const endY = fromY + offset.dy;
-
-    ctx.strokeStyle = COLORS.relative;
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(fromX, fromY);
-    ctx.lineTo(endX, endY);
-    ctx.stroke();
-    drawArrowHead(ctx, fromX, fromY, endX, endY, COLORS.relative, 12);
-
-    ctx.fillStyle = COLORS.relative;
-    ctx.font = 'bold 11px Share Tech Mono';
-    ctx.textAlign = 'left';
-    const midX = (fromX + endX) / 2;
-    const midY = (fromY + endY) / 2;
-    ctx.fillText(`Relatif ${results.relative.speed.toFixed(1)} kts`, midX + 5, midY - 5);
-
+    drawVector(ctx, fromX, fromY, endX, endY, COLORS.relative, {
+        label: `Relatif ${results.relative.speed.toFixed(1)} kts`, labelPos: 'mid',
+    });
     return { x: endX, y: endY };
 }
 
 function drawTrueTargetVector(ctx, centerX, centerY, targetEnd, results) {
-    ctx.strokeStyle = COLORS.trueVector;
-    ctx.lineWidth = 4;
-    ctx.setLineDash([8, 4]);
-    ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.lineTo(targetEnd.x, targetEnd.y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    drawArrowHead(ctx, centerX, centerY, targetEnd.x, targetEnd.y, COLORS.trueVector, 12);
-
-    ctx.fillStyle = COLORS.trueVector;
-    ctx.font = 'bold 11px Share Tech Mono';
-    ctx.textAlign = 'right';
-    ctx.fillText(`Vrai ${results.trueTarget.speed.toFixed(1)} kts`, targetEnd.x - 8, targetEnd.y);
+    drawVector(ctx, centerX, centerY, targetEnd.x, targetEnd.y, COLORS.trueVector, {
+        dash: [8, 4],
+        label: `Vrai ${results.trueTarget.speed.toFixed(1)} kts`, labelPos: 'end-right',
+    });
 }
 
 function drawOriginDot(ctx, centerX, centerY) {
@@ -100,41 +87,15 @@ function drawAvoidanceVectors(ctx, tt, targetEnd, model, avoidanceResults) {
     const offset = bearingToCanvasOffset(model.avoidance.course, model.avoidance.speed, tt.pixelsPerKnot, tt.rotation);
     const newOwnEndX = tt.centerX + offset.dx;
     const newOwnEndY = tt.centerY + offset.dy;
+    const opts = { lineWidth: 3, dash: [6, 4], arrowSize: 10 };
 
     ctx.globalAlpha = 0.4;
-
-    ctx.strokeStyle = COLORS.ownShip;
-    ctx.lineWidth = 3;
-    ctx.setLineDash([6, 4]);
-    ctx.beginPath();
-    ctx.moveTo(tt.centerX, tt.centerY);
-    ctx.lineTo(newOwnEndX, newOwnEndY);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    drawArrowHead(ctx, tt.centerX, tt.centerY, newOwnEndX, newOwnEndY, COLORS.ownShip, 10);
-
-    ctx.fillStyle = COLORS.ownShip;
-    ctx.font = 'bold 11px Share Tech Mono';
-    ctx.textAlign = 'left';
-    ctx.fillText(`${model.avoidance.speed.toFixed(1)} kts`, newOwnEndX + 8, newOwnEndY);
-
-    ctx.strokeStyle = COLORS.relative;
-    ctx.lineWidth = 3;
-    ctx.setLineDash([6, 4]);
-    ctx.beginPath();
-    ctx.moveTo(newOwnEndX, newOwnEndY);
-    ctx.lineTo(targetEnd.x, targetEnd.y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    drawArrowHead(ctx, newOwnEndX, newOwnEndY, targetEnd.x, targetEnd.y, COLORS.relative, 10);
-
-    ctx.fillStyle = COLORS.relative;
-    ctx.font = 'bold 11px Share Tech Mono';
-    ctx.textAlign = 'left';
-    const midX = (newOwnEndX + targetEnd.x) / 2;
-    const midY = (newOwnEndY + targetEnd.y) / 2;
-    ctx.fillText(`Relatif' ${avoidanceResults.relative.speed.toFixed(1)} kts`, midX + 5, midY - 5);
-
+    drawVector(ctx, tt.centerX, tt.centerY, newOwnEndX, newOwnEndY, COLORS.ownShip, {
+        ...opts, label: `${model.avoidance.speed.toFixed(1)} kts`,
+    });
+    drawVector(ctx, newOwnEndX, newOwnEndY, targetEnd.x, targetEnd.y, COLORS.relative, {
+        ...opts, label: `Relatif' ${avoidanceResults.relative.speed.toFixed(1)} kts`, labelPos: 'mid',
+    });
     ctx.globalAlpha = 1.0;
 }
 
@@ -259,7 +220,7 @@ export function renderTriangle(canvas, model, results, avoidanceResults) {
 
     const scaleFactor = NICE_SCALES[model.triangleScaleIndex]?.value ?? 1;
     const pixelsPerKnot = scaleFactor * maxRadius / MAX_CHART_KNOTS;
-    const tt = createTriangleTransform(centerX, centerY, pixelsPerKnot, rotation);
+    const tt = { centerX, centerY, pixelsPerKnot, rotation };
 
     const ownEnd = drawOwnShipVector(ctx, tt, model);
     const targetEnd = drawRelativeVector(ctx, tt, ownEnd.x, ownEnd.y, results);

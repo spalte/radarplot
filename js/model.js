@@ -1,6 +1,4 @@
-import { NICE_SCALES, RING_COUNT, BASE_KTS_PER_RING, RADAR_RANGES, DEFAULT_RADAR_RANGE_INDEX } from './draw.js';
-
-const MAX_CHART_KNOTS = RING_COUNT * BASE_KTS_PER_RING;
+import { NICE_SCALES, MAX_CHART_KNOTS, RADAR_RANGES, DEFAULT_RADAR_RANGE_INDEX } from './draw.js';
 
 function bestFitScaleIndex(maxSpeed) {
     for (let i = NICE_SCALES.length - 1; i >= 0; i--) {

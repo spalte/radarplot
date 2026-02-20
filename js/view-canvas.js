@@ -57,18 +57,18 @@ function drawTargetPositions(ctx, vt, results) {
     drawArrowHead(ctx, p1.x, p1.y, p2.x, p2.y, COLORS.target, 10);
 }
 
-function drawCPA(ctx, vt, results) {
-    if (results.relative.speed <= MIN_MOVEMENT_SPEED) return;
+function drawCPAMarker(ctx, vt, cpaPoint, label, alpha = 1) {
+    const cpa = vt.toCanvas(cpaPoint.x, cpaPoint.y);
 
-    const cpa = vt.toCanvas(results.cpa.point.x, results.cpa.point.y);
+    ctx.globalAlpha = alpha;
 
     ctx.fillStyle = COLORS.cpa;
     ctx.beginPath();
-    ctx.arc(cpa.x, cpa.y, 5, 0, Math.PI * 2);
+    ctx.arc(cpa.x, cpa.y, alpha < 1 ? 6 : 5, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.strokeStyle = COLORS.cpa;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = alpha < 1 ? 1.5 : 2;
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
     ctx.moveTo(vt.centerX, vt.centerY);
@@ -77,86 +77,33 @@ function drawCPA(ctx, vt, results) {
     ctx.setLineDash([]);
 
     ctx.fillStyle = COLORS.cpa;
-    ctx.font = 'bold 12px Share Tech Mono';
+    ctx.font = `bold ${alpha < 1 ? 11 : 12}px Share Tech Mono`;
     ctx.textAlign = 'left';
-    ctx.fillText('CPA', cpa.x + 12, cpa.y - 12);
+    ctx.fillText(label, cpa.x + 12, cpa.y - 12);
+
+    ctx.globalAlpha = 1;
 }
 
-function drawPredictionLine(ctx, vt, results) {
-    if (results.relative.speed <= MIN_MOVEMENT_SPEED) return;
+function drawPredictionDash(ctx, vt, fromPoint, toPoint, alpha = 1) {
+    const from = vt.toCanvas(fromPoint.x, fromPoint.y);
+    const pred = vt.toCanvas(toPoint.x, toPoint.y);
 
-    const p2 = vt.toCanvas(results.pos2.x, results.pos2.y);
-    const pred = vt.toCanvas(results.prediction.x, results.prediction.y);
+    ctx.globalAlpha = alpha;
 
     ctx.strokeStyle = COLORS.target;
     ctx.lineWidth = 1.5;
     ctx.setLineDash([4, 4]);
     ctx.beginPath();
-    ctx.moveTo(p2.x, p2.y);
+    ctx.moveTo(from.x, from.y);
     ctx.lineTo(pred.x, pred.y);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    ctx.strokeStyle = COLORS.target;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(pred.x, pred.y, 4, 0, Math.PI * 2);
-    ctx.stroke();
-}
-
-function drawAvoidancePrediction(ctx, vt, avoidanceResults) {
-    if (avoidanceResults.relative.speed <= MIN_MOVEMENT_SPEED) return;
-
-    const mp = vt.toCanvas(avoidanceResults.maneuverPoint.x, avoidanceResults.maneuverPoint.y);
-    const pred = vt.toCanvas(avoidanceResults.prediction.x, avoidanceResults.prediction.y);
-
-    ctx.globalAlpha = 0.45;
-
-    ctx.strokeStyle = COLORS.target;
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([4, 4]);
-    ctx.beginPath();
-    ctx.moveTo(mp.x, mp.y);
-    ctx.lineTo(pred.x, pred.y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.strokeStyle = COLORS.target;
-    ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.arc(pred.x, pred.y, 4, 0, Math.PI * 2);
     ctx.stroke();
 
-    ctx.globalAlpha = 1.0;
-}
-
-function drawAvoidanceCPA(ctx, vt, avoidanceResults) {
-    if (avoidanceResults.relative.speed <= MIN_MOVEMENT_SPEED) return;
-
-    const cpa = vt.toCanvas(avoidanceResults.cpa.point.x, avoidanceResults.cpa.point.y);
-
-    ctx.globalAlpha = 0.45;
-
-    ctx.fillStyle = COLORS.cpa;
-    ctx.beginPath();
-    ctx.arc(cpa.x, cpa.y, 6, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = COLORS.cpa;
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([5, 5]);
-    ctx.beginPath();
-    ctx.moveTo(vt.centerX, vt.centerY);
-    ctx.lineTo(cpa.x, cpa.y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.fillStyle = COLORS.cpa;
-    ctx.font = 'bold 11px Share Tech Mono';
-    ctx.textAlign = 'left';
-    ctx.fillText('CPA\'', cpa.x + 10, cpa.y - 10);
-
-    ctx.globalAlpha = 1.0;
+    ctx.globalAlpha = 1;
 }
 
 export function resizeCanvas(canvas) {
@@ -184,12 +131,15 @@ export function renderCanvas(canvas, model, results, avoidanceResults) {
 
     if (results) {
         drawTargetPositions(ctx, vt, results);
-        drawPredictionLine(ctx, vt, results);
-        drawCPA(ctx, vt, results);
+        if (results.relative.speed > MIN_MOVEMENT_SPEED) {
+            drawPredictionDash(ctx, vt, results.pos2, results.prediction);
+            drawCPAMarker(ctx, vt, results.cpa.point, 'CPA');
+        }
 
-        if (avoidanceResults && avoidanceResults.maneuverNeeded !== false) {
-            drawAvoidancePrediction(ctx, vt, avoidanceResults);
-            drawAvoidanceCPA(ctx, vt, avoidanceResults);
+        if (avoidanceResults && avoidanceResults.maneuverNeeded !== false
+            && avoidanceResults.relative.speed > MIN_MOVEMENT_SPEED) {
+            drawPredictionDash(ctx, vt, avoidanceResults.maneuverPoint, avoidanceResults.prediction, 0.45);
+            drawCPAMarker(ctx, vt, avoidanceResults.cpa.point, 'CPA\'', 0.45);
         }
     }
 }

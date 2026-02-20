@@ -22,6 +22,7 @@ export const NICE_SCALES = [
 ];
 export const RING_COUNT = 5;
 export const BASE_KTS_PER_RING = 5;
+export const MAX_CHART_KNOTS = RING_COUNT * BASE_KTS_PER_RING;
 
 export const RADAR_RANGES = [
     { range: 3,  rings: 3, label: '3 NM' },
@@ -88,6 +89,8 @@ export function setupCanvas(canvas) {
 
 export function drawPolarGrid(ctx, centerX, centerY, maxRadius, ringCount, ringLabelFn, options = {}) {
     const { minorAngleStep } = options;
+    const innerRadius = minorAngleStep ? maxRadius / ringCount : 0;
+    const radialStep = minorAngleStep || 30;
 
     ctx.strokeStyle = COLORS.grid;
     ctx.lineWidth = 1;
@@ -104,48 +107,22 @@ export function drawPolarGrid(ctx, centerX, centerY, maxRadius, ringCount, ringL
         ctx.fillText(ringLabelFn(i), centerX + 5, centerY - radius + 5);
     }
 
-    if (minorAngleStep) {
-        const innerRadius = maxRadius / ringCount;
-        ctx.strokeStyle = COLORS.grid;
-        ctx.lineWidth = 1;
-        for (let angle = 0; angle < 360; angle += minorAngleStep) {
-            const rad = angle * DEG_TO_RAD;
-            const dx = Math.sin(rad);
-            const dy = -Math.cos(rad);
-            ctx.beginPath();
-            ctx.moveTo(centerX + innerRadius * dx, centerY + innerRadius * dy);
-            ctx.lineTo(centerX + maxRadius * dx, centerY + maxRadius * dy);
-            ctx.stroke();
-        }
+    for (let angle = 0; angle < 360; angle += radialStep) {
+        const rad = angle * DEG_TO_RAD;
+        const dx = Math.sin(rad);
+        const dy = -Math.cos(rad);
+        ctx.beginPath();
+        ctx.moveTo(centerX + innerRadius * dx, centerY + innerRadius * dy);
+        ctx.lineTo(centerX + maxRadius * dx, centerY + maxRadius * dy);
+        ctx.stroke();
+    }
 
-        for (let angle = 0; angle < 360; angle += 30) {
-            const rad = angle * DEG_TO_RAD;
-            const dx = Math.sin(rad);
-            const dy = -Math.cos(rad);
-            const labelR = maxRadius + 20;
-            ctx.fillStyle = COLORS.angleLabel;
-            ctx.font = '12px Orbitron';
-            ctx.textAlign = 'center';
-            ctx.fillText(`${angle}\u00B0`, centerX + labelR * dx, centerY + labelR * dy);
-        }
-    } else {
-        for (let angle = 0; angle < 360; angle += 30) {
-            const rad = angle * DEG_TO_RAD;
-            const dx = Math.sin(rad);
-            const dy = -Math.cos(rad);
-
-            ctx.strokeStyle = COLORS.grid;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(centerX, centerY);
-            ctx.lineTo(centerX + maxRadius * dx, centerY + maxRadius * dy);
-            ctx.stroke();
-
-            const labelR = maxRadius + 20;
-            ctx.fillStyle = COLORS.angleLabel;
-            ctx.font = '12px Orbitron';
-            ctx.textAlign = 'center';
-            ctx.fillText(`${angle}\u00B0`, centerX + labelR * dx, centerY + labelR * dy);
-        }
+    ctx.fillStyle = COLORS.angleLabel;
+    ctx.font = '12px Orbitron';
+    ctx.textAlign = 'center';
+    for (let angle = 0; angle < 360; angle += 30) {
+        const rad = angle * DEG_TO_RAD;
+        const labelR = maxRadius + 20;
+        ctx.fillText(`${angle}\u00B0`, centerX + labelR * Math.sin(rad), centerY - labelR * Math.cos(rad));
     }
 }
