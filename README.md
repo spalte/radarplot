@@ -17,5 +17,5 @@ Then open `http://localhost:8080/index.html`.
 Requires Node 18+. No dependencies.
 
 ```bash
-node --test tests/bearings.test.js tests/calculator.test.js
+node --test tests/bearings.test.js tests/calculator.test.js tests/animation.test.js
 ```
