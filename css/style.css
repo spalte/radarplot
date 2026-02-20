@@ -49,6 +49,7 @@ body::before {
 }
 
 header {
+    position: relative;
     text-align: center;
     margin-bottom: 3rem;
     animation: slideDown 0.8s cubic-bezier(0.4, 0, 0.2, 1);
@@ -73,6 +74,29 @@ h1 {
     color: var(--text-secondary);
     letter-spacing: 0.3em;
     text-transform: uppercase;
+}
+
+.copy-link-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: auto;
+    padding: 0.4rem 1.2rem;
+    background: rgba(45, 70, 99, 0.6);
+    border: 1px solid var(--ocean-light);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: none;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.copy-link-btn:active {
+    transform: none;
 }
 
 .panel-own-ship              { grid-area: form; }
@@ -739,6 +763,14 @@ button:active {
         background: var(--grid-blue);
         border-color: var(--radar-green);
         box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        transform: none;
+    }
+
+    .copy-link-btn:hover {
+        color: var(--text-primary);
+        border-color: var(--grid-blue);
+        background: rgba(74, 144, 226, 0.3);
+        box-shadow: 0 0 10px rgba(74, 144, 226, 0.3);
         transform: none;
     }
 }

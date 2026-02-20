@@ -6,8 +6,10 @@ import { renderForm } from './view-form.js';
 import { renderCanvas, resizeCanvas } from './view-canvas.js';
 import { renderTriangle, resizeTriangleCanvas, renderScaleLabel, setupTriangleInteraction } from './view-triangle.js';
 import { resizeAnimationCanvas, updateAnimation, setAnimationControls, togglePlayback, seekTo } from './view-animation.js';
+import { applyFragment, syncFragmentToModel } from './fragment.js';
 
 const model = createModel();
+applyFragment(model);
 const radarCanvas = document.getElementById('radarCanvas');
 const triangleCanvas = document.getElementById('triangleCanvas');
 const animationCanvas = document.getElementById('animationCanvas');
@@ -37,6 +39,7 @@ function render() {
 }
 
 model.subscribe(render);
+model.subscribe(() => syncFragmentToModel(model));
 
 function bindInput(id, handler) {
     document.getElementById(id).addEventListener('input', handler);
@@ -77,6 +80,17 @@ bindInput('avoidanceDistance', (e) => model.setAvoidanceDistance(parseFloat(e.ta
 document.getElementById('avoidanceExit').addEventListener('click', () => model.exitAvoidance());
 
 setupTriangleInteraction(triangleCanvas, model);
+
+/* ── Copy link ── */
+
+document.getElementById('copyLinkBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+        const btn = document.getElementById('copyLinkBtn');
+        const original = btn.textContent;
+        btn.textContent = 'Lien copié !';
+        setTimeout(() => { btn.textContent = original; }, 2000);
+    });
+});
 
 /* ── Resize / Init ── */
 
