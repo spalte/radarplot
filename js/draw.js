@@ -179,11 +179,15 @@ export function drawTriangleGrid(ctx, centerX, centerY, maxRadius) {
     ctx.fillStyle = COLORS.angleLabel;
     ctx.font = '12px Orbitron';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'alphabetic';
+    ctx.textBaseline = 'middle';
     const labelR = maxRadius + 20;
+    const degW = ctx.measureText('\u00B0').width;
     for (let angle = 0; angle < 360; angle += 10) {
         const rad = angle * DEG_TO_RAD;
-        ctx.fillText(`${angle}\u00B0`, centerX + labelR * Math.sin(rad), centerY - labelR * Math.cos(rad));
+        const sinA = Math.sin(rad);
+        const leftFactor = Math.max(0, -sinA);
+        const xOffset = degW / 2 - leftFactor * leftFactor * degW;
+        ctx.fillText(`${angle}\u00B0`, centerX + labelR * sinA + xOffset, centerY - labelR * Math.cos(rad));
     }
 }
 
@@ -220,9 +224,14 @@ export function drawPolarGrid(ctx, centerX, centerY, maxRadius, ringCount, ringL
     ctx.fillStyle = COLORS.angleLabel;
     ctx.font = '12px Orbitron';
     ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const degW = ctx.measureText('\u00B0').width;
     for (let angle = 0; angle < 360; angle += 30) {
         const rad = angle * DEG_TO_RAD;
         const labelR = maxRadius + 20;
-        ctx.fillText(`${angle}\u00B0`, centerX + labelR * Math.sin(rad), centerY - labelR * Math.cos(rad));
+        const sinA = Math.sin(rad);
+        const leftFactor = Math.max(0, -sinA);
+        const xOffset = degW / 2 - leftFactor * leftFactor * degW;
+        ctx.fillText(`${angle}\u00B0`, centerX + labelR * sinA + xOffset, centerY - labelR * Math.cos(rad));
     }
 }
