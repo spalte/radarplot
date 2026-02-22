@@ -1,7 +1,7 @@
 import { DEG_TO_RAD, RAD_TO_DEG, normalizeBearing } from './constants.js';
 import {
-    COLORS, NICE_SCALES, RING_COUNT, BASE_KTS_PER_RING, MAX_CHART_KNOTS,
-    setupCanvas, getCanvasLogical, bearingToCanvasOffset, drawArrowHead, drawPolarGrid,
+    COLORS, NICE_SCALES, MAX_CHART_KNOTS,
+    setupCanvas, getCanvasLogical, bearingToCanvasOffset, drawArrowHead, drawTriangleGrid,
 } from './draw.js';
 
 let triangleState = null;
@@ -209,8 +209,7 @@ export function renderTriangle(canvas, model, results, avoidanceResults) {
     ctx.fillStyle = COLORS.background;
     ctx.fillRect(0, 0, width, height);
 
-    const ringLabel = (i) => `${i * BASE_KTS_PER_RING} kts`;
-    drawPolarGrid(ctx, centerX, centerY, maxRadius, RING_COUNT, ringLabel, { minorAngleStep: 10 });
+    drawTriangleGrid(ctx, centerX, centerY, maxRadius);
 
     if (!results) {
         triangleState = null;
