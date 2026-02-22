@@ -89,15 +89,26 @@ export function setupCanvas(canvas) {
 }
 
 export function drawTriangleGrid(ctx, centerX, centerY, maxRadius) {
+    const detail = maxRadius > 180 ? 'full' : maxRadius > 110 ? 'medium' : 'small';
+    const isFull = detail === 'full';
+
     const ringCount = RING_COUNT;
     const totalUnits = MAX_CHART_KNOTS;
     const ringStep = maxRadius / ringCount;
-    const innerRadius = ringStep;
     const pxPerUnit = maxRadius / totalUnits;
+
+    const ringSkip = detail === 'small' ? 2 : 1;
+    const radialStep = isFull ? 10 : detail === 'medium' ? 10 : 30;
+    const innerRadius = radialStep > 10 ? 0 : ringStep * ringSkip;
+    const tickStep = 1;
+    const showSubTicks = isFull;
+    const degLabelStep = isFull ? 10 : detail === 'medium' ? 10 : 30;
+    const rulerFont = isFull ? '10px Share Tech Mono' : detail === 'medium' ? '9px Share Tech Mono' : '8px Share Tech Mono';
+    const degFont = isFull ? '12px Orbitron' : detail === 'medium' ? '11px Orbitron' : '9px Orbitron';
     const boldRings = new Set([2, 3]);
 
     ctx.strokeStyle = COLORS.grid;
-    for (let i = 1; i <= ringCount; i++) {
+    for (let i = ringSkip; i <= ringCount; i += ringSkip) {
         const radius = ringStep * i;
         ctx.lineWidth = boldRings.has(i) ? 1.8 : 1;
         ctx.beginPath();
@@ -107,7 +118,7 @@ export function drawTriangleGrid(ctx, centerX, centerY, maxRadius) {
 
     ctx.strokeStyle = COLORS.grid;
     ctx.lineWidth = 1;
-    for (let angle = 0; angle < 360; angle += 10) {
+    for (let angle = 0; angle < 360; angle += radialStep) {
         if (angle === 90) continue;
         const rad = angle * DEG_TO_RAD;
         const dx = Math.sin(rad);
@@ -129,14 +140,14 @@ export function drawTriangleGrid(ctx, centerX, centerY, maxRadius) {
     const subTickHalf = 2.5;
     ctx.strokeStyle = COLORS.grid;
     ctx.lineWidth = 1;
-    for (let u = 0; u <= totalUnits; u++) {
+    for (let u = 0; u <= totalUnits; u += tickStep) {
         const x = centerX + u * pxPerUnit;
         ctx.beginPath();
         ctx.moveTo(x, centerY - intTickHalf);
         ctx.lineTo(x, centerY + intTickHalf);
         ctx.stroke();
 
-        if (u < totalUnits) {
+        if (showSubTicks && u < totalUnits) {
             for (let s = 1; s <= 4; s++) {
                 const sx = x + s * 0.2 * pxPerUnit;
                 ctx.beginPath();
@@ -147,42 +158,45 @@ export function drawTriangleGrid(ctx, centerX, centerY, maxRadius) {
         }
     }
 
-    ctx.font = '10px Share Tech Mono';
+    ctx.font = rulerFont;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
     const labelY = centerY - intTickHalf - 2;
     const pad = 2;
-    for (let u = 0; u <= totalUnits - 1; u++) {
+    const rulerFontSize = isFull ? 11 : detail === 'medium' ? 10 : 9;
+    for (let u = 0; u <= totalUnits - 1; u += tickStep) {
         const x = centerX + u * pxPerUnit;
         const text = `${u}`;
         const tw = ctx.measureText(text).width;
         ctx.fillStyle = COLORS.background;
-        ctx.fillRect(x - tw / 2 - pad, labelY - 11 - pad, tw + pad * 2, 12 + pad * 2);
+        ctx.fillRect(x - tw / 2 - pad, labelY - rulerFontSize - pad, tw + pad * 2, rulerFontSize + 1 + pad * 2);
         ctx.fillStyle = COLORS.gridLabel;
         ctx.fillText(text, x, labelY);
     }
 
-    const outerTickLen = 5;
-    ctx.strokeStyle = COLORS.grid;
-    ctx.lineWidth = 1;
-    for (let angle = 0; angle < 360; angle += 2) {
-        if (angle % 10 === 0) continue;
-        const rad = angle * DEG_TO_RAD;
-        const dx = Math.sin(rad);
-        const dy = -Math.cos(rad);
-        ctx.beginPath();
-        ctx.moveTo(centerX + maxRadius * dx, centerY + maxRadius * dy);
-        ctx.lineTo(centerX + (maxRadius - outerTickLen) * dx, centerY + (maxRadius - outerTickLen) * dy);
-        ctx.stroke();
+    {
+        const outerTickLen = 5;
+        ctx.strokeStyle = COLORS.grid;
+        ctx.lineWidth = 1;
+        for (let angle = 0; angle < 360; angle += 2) {
+            if (angle % 10 === 0) continue;
+            const rad = angle * DEG_TO_RAD;
+            const dx = Math.sin(rad);
+            const dy = -Math.cos(rad);
+            ctx.beginPath();
+            ctx.moveTo(centerX + maxRadius * dx, centerY + maxRadius * dy);
+            ctx.lineTo(centerX + (maxRadius - outerTickLen) * dx, centerY + (maxRadius - outerTickLen) * dy);
+            ctx.stroke();
+        }
     }
 
     ctx.fillStyle = COLORS.angleLabel;
-    ctx.font = '12px Orbitron';
+    ctx.font = degFont;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const labelR = maxRadius + 20;
+    const labelR = maxRadius + (isFull ? 20 : 16);
     const degW = ctx.measureText('\u00B0').width;
-    for (let angle = 0; angle < 360; angle += 10) {
+    for (let angle = 0; angle < 360; angle += degLabelStep) {
         const rad = angle * DEG_TO_RAD;
         const sinA = Math.sin(rad);
         const leftFactor = Math.max(0, -sinA);
