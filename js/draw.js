@@ -179,7 +179,8 @@ export function drawTriangleGrid(ctx, centerX, centerY, maxRadius) {
         ctx.strokeStyle = COLORS.grid;
         ctx.lineWidth = 1;
         for (let angle = 0; angle < 360; angle += 2) {
-            if (angle % 10 === 0) continue;
+            // Suppress minor rim ticks where a major radial line exists at current detail level.
+            if (angle % radialStep === 0) continue;
             const rad = angle * DEG_TO_RAD;
             const dx = Math.sin(rad);
             const dy = -Math.cos(rad);
