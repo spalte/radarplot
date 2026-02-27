@@ -20,12 +20,12 @@ function hhmmToTime(str) {
 
 function parseFloat_(v) {
     const n = parseFloat(v);
-    return isNaN(n) ? null : n;
+    return Number.isFinite(n) ? n : null;
 }
 
 function parseInt_(v) {
     const n = parseInt(v, 10);
-    return isNaN(n) ? null : n;
+    return Number.isFinite(n) ? n : null;
 }
 
 export function applyFragment(model) {
